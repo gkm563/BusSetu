@@ -7,11 +7,12 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useRecentSearches } from "@/hooks/useRecentSearches";
 import { useUiStore } from "@/store/useUiStore";
+import { MOCK_STOPS } from "@/data/mock/stops";
 
 const POPULAR: { from: string; to: string }[] = [
   { from: "Prayagraj", to: "Mirzapur" },
@@ -85,16 +86,17 @@ export function RouteSearchPanel() {
     >
       <div className="grid grid-cols-1 items-center gap-2 sm:grid-cols-[1fr_auto_1fr_auto]">
         <div className="relative">
-          <FieldInput
+          <AutocompleteInput
             value={from}
             onChange={setFrom}
             placeholder="From (e.g. Prayagraj)"
             aria-label="From location"
+            className="pr-20"
           />
           <button
             type="button"
             onClick={useCurrent}
-            className="absolute right-1.5 top-1/2 flex -translate-y-1/2 items-center gap-1 rounded-full bg-brand/10 px-2 py-1 text-[10px] font-semibold text-brand transition-colors hover:bg-brand/20"
+            className="absolute right-1.5 top-1/2 flex -translate-y-1/2 items-center gap-1 rounded-full bg-brand/10 px-2 py-1 text-[10px] font-semibold text-brand transition-colors hover:bg-brand/20 z-10"
             aria-label="Use current location"
           >
             <LocateFixed className="h-3 w-3" aria-hidden /> Current
@@ -110,7 +112,7 @@ export function RouteSearchPanel() {
         >
           <ArrowLeftRight className="h-4 w-4" aria-hidden />
         </button>
-        <FieldInput
+        <AutocompleteInput
           value={to}
           onChange={setTo}
           placeholder="To (e.g. Mirzapur)"
@@ -146,7 +148,7 @@ export function RouteSearchPanel() {
 
       {showExtras && (
         <div className="space-y-2 border-t border-border/60 pt-2">
-          <FieldInput
+          <AutocompleteInput
             value={via}
             onChange={setVia}
             placeholder="Via (optional)"
@@ -249,23 +251,162 @@ function RouteChip({ label, onClick }: { label: string; onClick: () => void }) {
   );
 }
 
-function FieldInput({
+const ALL_LOCATIONS = Array.from(
+  new Set([...MOCK_STOPS.map((s) => s.city), ...MOCK_STOPS.map((s) => s.name)]),
+).sort();
+
+function AutocompleteInput({
   value,
   onChange,
   placeholder,
+  className = "",
   ...rest
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder: string;
-} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange">) {
+  className?: string;
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "className">) {
+  const [focused, setFocused] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const clickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setFocused(false);
+      }
+    };
+    document.addEventListener("mousedown", clickOutside);
+    return () => document.removeEventListener("mousedown", clickOutside);
+  }, []);
+
+  const q = value.trim().toLowerCase();
+
+  const suggestions = useMemo(() => {
+    if (!q) return [];
+    const filtered = ALL_LOCATIONS.filter((loc) => loc.toLowerCase().includes(q));
+    return filtered
+      .sort((a, b) => {
+        const aStarts = a.toLowerCase().startsWith(q);
+        const bStarts = b.toLowerCase().startsWith(q);
+        if (aStarts && !bStarts) return -1;
+        if (!aStarts && bStarts) return 1;
+        return a.localeCompare(b);
+      })
+      .slice(0, 5);
+  }, [q]);
+
+  const inlinePrediction = useMemo(() => {
+    if (!q) return "";
+    const match = ALL_LOCATIONS.find((loc) => loc.toLowerCase().startsWith(q));
+    if (match) {
+      return value + match.substring(value.length);
+    }
+    return "";
+  }, [value, q]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Tab" || e.key === "ArrowRight") {
+      if (inlinePrediction && inlinePrediction !== value) {
+        e.preventDefault();
+        onChange(inlinePrediction);
+        setSelectedIndex(-1);
+      } else if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
+        e.preventDefault();
+        onChange(suggestions[selectedIndex]);
+        setFocused(false);
+        setSelectedIndex(-1);
+      }
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (suggestions.length > 0) {
+        setSelectedIndex((prev) => (prev + 1) % suggestions.length);
+      }
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (suggestions.length > 0) {
+        setSelectedIndex((prev) => (prev - 1 + suggestions.length) % suggestions.length);
+      }
+    } else if (e.key === "Enter") {
+      if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
+        e.preventDefault();
+        onChange(suggestions[selectedIndex]);
+        setFocused(false);
+        setSelectedIndex(-1);
+      }
+    } else if (e.key === "Escape") {
+      setFocused(false);
+      setSelectedIndex(-1);
+    }
+  };
+
   return (
-    <input
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      className="min-w-0 rounded-xl border border-border/70 bg-card px-3 py-2.5 pr-20 text-sm outline-none transition-colors focus:border-brand/60 focus:ring-2 focus:ring-brand/15"
-      {...rest}
-    />
+    <div ref={containerRef} className="relative flex-1">
+      <div
+        className={`relative flex w-full min-w-0 items-center rounded-xl border border-border/70 bg-card transition-colors focus-within:border-brand/60 focus-within:ring-2 focus-within:ring-brand/15 ${className}`}
+      >
+        {focused &&
+          inlinePrediction &&
+          inlinePrediction.toLowerCase().startsWith(value.toLowerCase()) && (
+            <div className="pointer-events-none absolute left-0 top-1/2 flex -translate-y-1/2 items-center pl-3 text-sm">
+              <span className="text-transparent select-none whitespace-pre">{value}</span>
+              <span className="text-muted-foreground/35 select-none whitespace-pre">
+                {inlinePrediction.substring(value.length)}
+              </span>
+            </div>
+          )}
+
+        <input
+          value={value}
+          onChange={(e) => {
+            onChange(e.target.value);
+            setSelectedIndex(-1);
+          }}
+          onFocus={() => setFocused(true)}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          className="w-full min-w-0 bg-transparent px-3 py-2.5 text-sm outline-none placeholder:text-muted-foreground"
+          {...rest}
+        />
+      </div>
+
+      {focused && suggestions.length > 0 && (
+        <ul className="absolute left-0 right-0 top-full z-[1000] mt-1.5 max-h-60 overflow-y-auto rounded-xl border border-border/80 bg-card p-1 shadow-lg backdrop-blur-md">
+          {suggestions.map((s, index) => {
+            const isSelected = index === selectedIndex;
+            const matchIndex = s.toLowerCase().indexOf(q);
+            const before = s.substring(0, matchIndex);
+            const match = s.substring(matchIndex, matchIndex + q.length);
+            const after = s.substring(matchIndex + q.length);
+
+            return (
+              <li key={s}>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    onChange(s);
+                    setFocused(false);
+                    setSelectedIndex(-1);
+                  }}
+                  className={`flex w-full items-center px-3 py-2 text-left text-xs rounded-lg transition-colors ${
+                    isSelected
+                      ? "bg-brand/10 text-brand font-medium"
+                      : "hover:bg-accent text-foreground"
+                  }`}
+                >
+                  <span className="truncate">
+                    {before}
+                    <strong className="font-semibold text-foreground">{match}</strong>
+                    {after}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   );
 }
