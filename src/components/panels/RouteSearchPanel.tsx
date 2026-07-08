@@ -8,8 +8,10 @@ import {
   Sparkles,
   Users,
   X,
+  BusFront,
+  Route as RouteIcon
 } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useGeolocation } from "@/hooks/useGeolocation";
@@ -47,6 +49,10 @@ export function RouteSearchPanel({ variant = "vertical" }: { variant?: "vertical
   const [via, setVia] = useState("");
   const [departAt, setDepartAt] = useState(new Date().toISOString().split("T")[0]);
   const [showExtras, setShowExtras] = useState(false);
+
+  const [activeTab, setActiveTab] = useState<"route" | "bus">("route");
+  const [busSearch, setBusSearch] = useState("");
+  const navigate = useNavigate();
 
   // Sync external store changes (e.g. navigation from /routes page) into
   // local input state so the search box shows what was pre-filled.
@@ -101,7 +107,7 @@ export function RouteSearchPanel({ variant = "vertical" }: { variant?: "vertical
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
       if (url.pathname === "/") {
-        window.location.href = `/search?from=${encodeURIComponent(next.from)}&to=${encodeURIComponent(next.to)}${next.via ? `&via=${encodeURIComponent(next.via)}` : ""}`;
+        navigate({ to: "/search", search: { from: next.from, to: next.to, via: next.via || undefined } as any });
         return;
       }
 
@@ -123,6 +129,34 @@ export function RouteSearchPanel({ variant = "vertical" }: { variant?: "vertical
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     submit({ from, to, via });
+  }
+
+  function onTrackBus(e: React.FormEvent) {
+    e.preventDefault();
+    if (!busSearch.trim()) return;
+
+    const cleanQ = busSearch.toLowerCase().replace(/\s+/g, "");
+    let matchTripId = null;
+
+    const activeTripIds = useLiveStore.getState().tripIdList;
+    const trips = useLiveStore.getState().tripsById;
+    const buses = useLiveStore.getState().busesById;
+
+    for (const tid of activeTripIds) {
+      const trip = trips[tid];
+      const bus = trip ? buses[trip.busId] : null;
+      if (bus && bus.busNumber.toLowerCase().replace(/\s+/g, "").includes(cleanQ)) {
+        matchTripId = trip.tripId;
+        break;
+      }
+    }
+
+    if (matchTripId) {
+      selectTrip(matchTripId);
+      navigate({ to: "/search" });
+    } else {
+      toast.error("Bus not found", { description: "We couldn't find an active live bus with that number right now." });
+    }
   }
 
   function onSwap() {
@@ -155,11 +189,33 @@ export function RouteSearchPanel({ variant = "vertical" }: { variant?: "vertical
   }
 
   return variant === "horizontal" ? (
-    <form
-      onSubmit={onSubmit}
-      className="relative flex flex-col md:flex-row items-center w-full max-w-5xl mx-auto rounded-[32px] bg-card border border-border/50 shadow-2xl overflow-visible"
-      aria-label="Search a bus route"
-    >
+    <div className="flex flex-col items-center w-full max-w-5xl mx-auto">
+      {/* Tabs */}
+      <div className="flex bg-card/90 backdrop-blur-md rounded-t-[20px] px-6 pt-3 -mb-[20px] pb-[20px] z-10 gap-8 shadow-[0_-8px_30px_rgb(0,0,0,0.12)]">
+        <button 
+          onClick={() => setActiveTab("route")}
+          type="button"
+          className={`pb-2 text-sm font-bold border-b-[3px] transition-colors flex items-center gap-2 ${activeTab === "route" ? "border-[#d84e55] text-[#d84e55]" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+        >
+          <RouteIcon className="h-4 w-4" />
+          Bus Tickets
+        </button>
+        <button 
+          onClick={() => setActiveTab("bus")}
+          type="button"
+          className={`pb-2 text-sm font-bold border-b-[3px] transition-colors flex items-center gap-2 ${activeTab === "bus" ? "border-[#d84e55] text-[#d84e55]" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+        >
+          <BusFront className="h-4 w-4" />
+          Track My Bus
+        </button>
+      </div>
+
+      {activeTab === "route" ? (
+        <form
+          onSubmit={onSubmit}
+          className="relative flex flex-col md:flex-row items-center w-full rounded-[32px] bg-card border border-border/50 shadow-2xl overflow-visible z-20"
+          aria-label="Search a bus route"
+        >
       <div className="flex-1 flex flex-col md:flex-row items-center w-full p-2 gap-2">
         <div className="relative flex-1 w-full min-w-[240px] px-4 py-3 flex items-center gap-3 bg-accent/20 rounded-2xl md:rounded-l-3xl md:rounded-r-none hover:bg-accent/40 transition-colors">
           <LocateFixed className="h-5 w-5 text-muted-foreground" />
@@ -238,6 +294,35 @@ export function RouteSearchPanel({ variant = "vertical" }: { variant?: "vertical
         <Search className="h-5 w-5" aria-hidden /> Search buses
       </button>
     </form>
+    ) : (
+      <form
+        onSubmit={onTrackBus}
+        className="relative flex flex-col md:flex-row items-center w-full max-w-2xl mx-auto rounded-[32px] bg-card border border-border/50 shadow-2xl overflow-visible z-20 min-h-[88px]"
+        aria-label="Track a specific bus"
+      >
+        <div className="flex-1 flex flex-col md:flex-row items-center w-full p-2 gap-2">
+          <div className="relative flex-1 w-full px-6 py-3 flex items-center gap-4 bg-accent/20 rounded-3xl hover:bg-accent/40 transition-colors">
+            <BusFront className="h-6 w-6 text-muted-foreground" />
+            <div className="flex flex-col flex-1">
+              <span className="text-[10px] text-muted-foreground uppercase font-semibold">Bus Registration Number</span>
+              <input
+                value={busSearch}
+                onChange={(e) => setBusSearch(e.target.value)}
+                placeholder="e.g. UP 70 AG 2115"
+                className="bg-transparent border-none text-xl font-bold text-foreground p-0 focus:ring-0 w-full placeholder:font-normal placeholder:text-muted-foreground/40 outline-none"
+              />
+            </div>
+          </div>
+        </div>
+        <button
+          type="submit"
+          className="absolute -bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center gap-2 rounded-full bg-[#d84e55] px-12 py-3.5 text-base font-bold text-white shadow-xl transition-transform hover:scale-105 hover:bg-[#c64147]"
+        >
+          <Search className="h-5 w-5" aria-hidden /> Track Bus
+        </button>
+      </form>
+    )}
+  </div>
   ) : (
     <form
       onSubmit={onSubmit}
