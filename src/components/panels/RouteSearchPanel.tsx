@@ -3,10 +3,13 @@ import {
   CalendarClock,
   Clock,
   LocateFixed,
+  MapPin,
   Search,
   Sparkles,
+  Users,
   X,
 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useGeolocation } from "@/hooks/useGeolocation";
@@ -23,7 +26,7 @@ const POPULAR: { from: string; to: string }[] = [
   { from: "Prayagraj", to: "Varanasi" },
 ];
 
-export function RouteSearchPanel() {
+export function RouteSearchPanel({ variant = "vertical" }: { variant?: "vertical" | "horizontal" }) {
   const setRouteQuery = useUiStore((s) => s.setRouteQuery);
   const clearRouteQuery = useUiStore((s) => s.clearRouteQuery);
   const active = useUiStore((s) => s.routeQuery.active);
@@ -151,7 +154,91 @@ export function RouteSearchPanel() {
     }
   }
 
-  return (
+  return variant === "horizontal" ? (
+    <form
+      onSubmit={onSubmit}
+      className="relative flex flex-col md:flex-row items-center w-full max-w-5xl mx-auto rounded-[32px] bg-card border border-border/50 shadow-2xl overflow-visible"
+      aria-label="Search a bus route"
+    >
+      <div className="flex-1 flex flex-col md:flex-row items-center w-full p-2 gap-2">
+        <div className="relative flex-1 w-full min-w-[240px] px-4 py-3 flex items-center gap-3 bg-accent/20 rounded-2xl md:rounded-l-3xl md:rounded-r-none hover:bg-accent/40 transition-colors">
+          <LocateFixed className="h-5 w-5 text-muted-foreground" />
+          <div className="flex flex-col flex-1">
+            <span className="text-[10px] text-muted-foreground uppercase font-semibold">From</span>
+            <AutocompleteInput
+              value={from}
+              onChange={setFrom}
+              placeholder="Prayagraj"
+              aria-label="From location"
+              className="bg-transparent border-none text-base font-bold text-foreground p-0 focus:ring-0 w-full placeholder:font-normal placeholder:text-muted-foreground/60"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={onSwap}
+            disabled={!from && !to}
+            className="absolute -right-5 top-1/2 -translate-y-1/2 z-10 grid h-9 w-9 place-items-center rounded-full border border-border bg-card text-muted-foreground shadow-md transition-all hover:scale-110 hover:border-brand/50 hover:text-brand disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label="Swap From and To"
+            title="Swap"
+          >
+            <ArrowLeftRight className="h-4 w-4" aria-hidden />
+          </button>
+        </div>
+
+        <div className="relative flex-1 w-full min-w-[240px] px-8 py-3 flex items-center gap-3 bg-accent/20 rounded-2xl md:rounded-none hover:bg-accent/40 transition-colors">
+          <MapPin className="h-5 w-5 text-muted-foreground" />
+          <div className="flex flex-col flex-1">
+            <span className="text-[10px] text-muted-foreground uppercase font-semibold">To</span>
+            <AutocompleteInput
+              value={to}
+              onChange={setTo}
+              placeholder="Delhi"
+              aria-label="To location"
+              className="bg-transparent border-none text-base font-bold text-foreground p-0 focus:ring-0 w-full placeholder:font-normal placeholder:text-muted-foreground/60"
+            />
+          </div>
+        </div>
+
+        <div className="w-px h-12 bg-border hidden md:block" />
+
+        <div className="flex-1 w-full min-w-[200px] px-4 py-3 flex items-center gap-3 bg-accent/20 rounded-2xl md:rounded-none hover:bg-accent/40 transition-colors">
+          <CalendarClock className="h-5 w-5 text-muted-foreground" />
+          <div className="flex flex-col flex-1">
+            <span className="text-[10px] text-muted-foreground uppercase font-semibold">Date of Journey</span>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-base font-bold text-foreground whitespace-nowrap">Today</span>
+              <div className="flex gap-1 ml-auto">
+                <button type="button" className="px-2 py-0.5 text-[10px] font-semibold rounded bg-muted text-muted-foreground hover:bg-brand/10 hover:text-brand transition-colors">Today</button>
+                <button type="button" className="px-2 py-0.5 text-[10px] font-semibold rounded bg-muted text-muted-foreground hover:bg-brand/10 hover:text-brand transition-colors">Tomorrow</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="w-px h-12 bg-border hidden md:block" />
+
+        <div className="flex items-center justify-center gap-2 px-4 py-3 min-w-[180px] bg-accent/20 rounded-2xl md:rounded-r-3xl md:rounded-l-none">
+          <div className="h-8 w-8 bg-pink-500/10 rounded-full flex items-center justify-center">
+            <Users className="h-4 w-4 text-pink-600" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[11px] font-semibold">Booking for women</span>
+            <Link to="/about" className="text-[10px] text-brand hover:underline">Know more</Link>
+          </div>
+          <div className="ml-auto w-8 h-4 bg-muted rounded-full relative cursor-pointer">
+            <div className="absolute left-0.5 top-0.5 w-3 h-3 bg-background rounded-full" />
+          </div>
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        className="absolute -bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center gap-2 rounded-full bg-[#d84e55] px-12 py-3.5 text-base font-bold text-white shadow-xl transition-transform hover:scale-105 hover:bg-[#c64147]"
+      >
+        <Search className="h-5 w-5" aria-hidden /> Search buses
+      </button>
+    </form>
+  ) : (
     <form
       onSubmit={onSubmit}
       className="glass-panel pointer-events-auto flex w-[min(600px,calc(100vw-2rem))] flex-col gap-2 rounded-3xl p-3"

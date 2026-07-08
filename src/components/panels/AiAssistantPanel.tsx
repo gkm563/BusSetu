@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, X, Send, Bot, User, Loader2 } from "lucide-react";
+import { Bot, User, X, Loader2, Sparkles, Send } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { AiChatService, type ChatMessage } from "@/services/ai/AiChatService";
 import { useGeolocation } from "@/hooks/useGeolocation";
 
@@ -35,7 +36,7 @@ export function AiAssistantPanel() {
 
     try {
       // Exclude system contexts when sending history
-      const response = await AiChatService.askGemini(
+      const response = await AiChatService.askAi(
         prompt,
         location,
         messages.filter((m) => m.text !== messages[0].text)
@@ -122,11 +123,15 @@ export function AiAssistantPanel() {
                     <div
                       className={`max-w-[85%] rounded-2xl px-3 py-2.5 text-xs leading-normal shadow-sm ${
                         isModel
-                          ? "bg-card border border-border/60 text-foreground rounded-tl-sm"
+                          ? "bg-card border border-border/60 text-foreground rounded-tl-sm prose prose-sm prose-p:leading-relaxed prose-pre:p-0 prose-pre:bg-transparent max-w-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_strong]:font-bold [&_strong]:text-foreground [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_li]:mt-1"
                           : "bg-brand text-brand-foreground rounded-tr-sm"
                       }`}
                     >
-                      {m.text}
+                      {isModel ? (
+                        <ReactMarkdown>{m.text}</ReactMarkdown>
+                      ) : (
+                        m.text
+                      )}
                     </div>
                     {!isModel && (
                       <div className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-muted border text-muted-foreground">

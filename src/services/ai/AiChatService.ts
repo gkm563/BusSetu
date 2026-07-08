@@ -48,8 +48,8 @@ Instructions:
 `;
   },
 
-  async askGemini(prompt: string, userLocation: { lat: number; lng: number } | null, history: ChatMessage[]) {
-    const key = "AIzaSyDLBAay_bhs8z81FaX2g5d21RBWM32kWzU";
+  async askAi(prompt: string, userLocation: { lat: number; lng: number } | null, history: ChatMessage[]) {
+    const key = import.meta.env.VITE_GEMINI_API_KEY || "YOUR_API_KEY_HERE";
     const context = this.getSystemContext(userLocation);
 
     // Format history for Gemini API
@@ -77,7 +77,9 @@ Instructions:
     });
 
     if (!res.ok) {
-      throw new Error("Failed to consult Gemini API");
+      const errorData = await res.json().catch(() => null);
+      console.error("Gemini API Error:", errorData);
+      throw new Error(errorData?.error?.message || "Failed to consult Gemini API");
     }
 
     const data = await res.json();

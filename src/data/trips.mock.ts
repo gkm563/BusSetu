@@ -434,7 +434,7 @@ const SEEDS: Seed[] = [
   // Scheduled and boarding at origin
   {
     tripId: "t-del-alld-00a",
-    busId: "b-044",
+    busId: "b-004",
     routeId: "r-del-alld",
     direction: "forward",
     progress: 0,
@@ -445,7 +445,7 @@ const SEEDS: Seed[] = [
   },
   {
     tripId: "t-del-alld-00b",
-    busId: "b-045",
+    busId: "b-005",
     routeId: "r-del-alld",
     direction: "forward",
     progress: 0,
@@ -554,7 +554,7 @@ const SEEDS: Seed[] = [
   // Scheduled and boarding at origin
   {
     tripId: "t-alld-del-00a",
-    busId: "b-046",
+    busId: "b-006",
     routeId: "r-alld-del",
     direction: "forward",
     progress: 0,
@@ -565,7 +565,7 @@ const SEEDS: Seed[] = [
   },
   {
     tripId: "t-alld-del-00b",
-    busId: "b-047",
+    busId: "b-007",
     routeId: "r-alld-del",
     direction: "forward",
     progress: 0,

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Hero } from "@/components/home/Hero";
+import { OffersSection } from "@/components/home/OffersSection";
 import { HomeLiveTracker } from "@/components/home/HomeLiveTracker";
 import { StatsSection } from "@/components/home/StatsSection";
 import { FeaturesGrid } from "@/components/home/FeaturesGrid";
@@ -41,6 +42,9 @@ function Index() {
       <main id="main-content" tabIndex={-1} aria-label="BusSetu landing page">
         <section id="top" aria-label="Live Radar preview and introduction">
           <Hero />
+        </section>
+        <section aria-label="Offers for you">
+          <OffersSection />
         </section>
         <section aria-label="Live Telemetry Dashboard">
           <HomeLiveTracker />
