@@ -17,7 +17,7 @@ export function AiAssistantPanel() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const { location } = useGeolocation();
-  const { language } = useTranslation();
+  const { language, setLanguage } = useTranslation();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -101,12 +101,30 @@ export function AiAssistantPanel() {
                   <p className="text-[10px] text-muted-foreground">Powered by Gemini 2.5 Flash</p>
                 </div>
               </div>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted/80 hover:text-foreground cursor-pointer"
-              >
-                <X className="h-4 w-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <select
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value as any)}
+                    className="appearance-none rounded-full border border-border/70 bg-card text-foreground text-[10px] font-semibold pl-2 pr-6 py-1 focus:outline-none hover:bg-accent cursor-pointer"
+                  >
+                    <option value="en">🇺🇸 EN</option>
+                    <option value="hi">🇮🇳 HI</option>
+                    <option value="th">🇹🇭 TH</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-1.5 flex items-center">
+                    <svg className="h-2 w-2 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted/80 hover:text-foreground cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
             {/* Chat Messages */}
