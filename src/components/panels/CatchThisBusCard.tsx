@@ -257,8 +257,6 @@ export function CatchThisBusModal({ isOpen, onClose }: { isOpen: boolean; onClos
     return occupied;
   }, [view]);
 
-  if (!view || !location || !assessment) return null;
-
   const { userStopIndex, userProgress } = useMemo(() => {
     if (!view || !location) return { userStopIndex: 0, userProgress: 0 };
     let minDistance = Infinity;
@@ -273,6 +271,8 @@ export function CatchThisBusModal({ isOpen, onClose }: { isOpen: boolean; onClos
     const progress = view.route.stops.length <= 1 ? 0 : idx / (view.route.stops.length - 1);
     return { userStopIndex: idx, userProgress: progress };
   }, [view, location]);
+
+  if (!view || !location || !assessment) return null;
 
   const hasCrossed = view ? view.trip.routeProgress > userProgress + 0.02 : false;
 

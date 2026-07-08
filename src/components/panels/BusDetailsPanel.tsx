@@ -1005,7 +1005,7 @@ function SparklineCard({
         .join(" ")
     : "";
   const areaPath = pts
-    ? `M 0 ${H} L ${pts.replace(/,/g, " L ").split(" L ").join(" L ")} L ${W} ${H} Z`
+    ? `M 0 ${H} L ${pts.replace(/ /g, " L ")} L ${W} ${H} Z`
     : "";
   return (
     <div className="rounded-xl border border-border/60 bg-card/70 p-2.5">
