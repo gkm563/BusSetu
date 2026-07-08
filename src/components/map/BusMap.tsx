@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useLiveStore } from "@/store/useLiveStore";
 import { useUiStore } from "@/store/useUiStore";
 import { TripMarker } from "./TripMarker";
-import { MapControls } from "./MapControls";
 import { userDivIcon } from "./busIcon";
 import { StopMarker } from "./StopMarker";
 import { SelectedTripFollower } from "./SelectedTripFollower";
@@ -413,22 +412,6 @@ export function BusMap() {
 
         <SelectedTripFollower />
 
-        <MapControls
-          onToggleStops={() => setShowStops((v) => !v)}
-          showStops={showStops}
-          onToggleRoutes={() => setShowRoutes((v) => !v)}
-          showRoutes={showRoutes}
-          onToggleTraffic={() => setShowTraffic((v) => !v)}
-          showTraffic={showTraffic}
-          baseLayer={baseLayer}
-          onChangeBaseLayer={setBaseLayer}
-          onReset={() => {
-            // Handled inside MapControls via useMap()
-          }}
-          onLocated={() => {
-            // No-op: user dot binds directly to hook location
-          }}
-        />
       </MapContainer>
 
       <MapSkeleton
