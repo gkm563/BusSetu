@@ -431,6 +431,30 @@ const SEEDS: Seed[] = [
   // User city = Prayagraj (destination). Buses approaching user.
   // ════════════════════════════════════════════════════════════
 
+  // Scheduled and boarding at origin
+  {
+    tripId: "t-del-alld-00a",
+    busId: "b-044",
+    routeId: "r-del-alld",
+    direction: "forward",
+    progress: 0,
+    speed: 0,
+    fillRatio: 0.15,
+    status: "scheduled",
+    phase: "scheduled",
+  },
+  {
+    tripId: "t-del-alld-00b",
+    busId: "b-045",
+    routeId: "r-del-alld",
+    direction: "forward",
+    progress: 0,
+    speed: 0,
+    fillRatio: 0.85,
+    status: "boarding",
+    phase: "boarding",
+  },
+
   // Phase 1 – Just departed Delhi Kashmiri Gate
   {
     tripId: "t-del-alld-01",
@@ -526,6 +550,30 @@ const SEEDS: Seed[] = [
   // ROUTE 6: Prayagraj → Delhi  (r-alld-del)
   // User city = Prayagraj (origin). Buses leaving user's city.
   // ════════════════════════════════════════════════════════════
+
+  // Scheduled and boarding at origin
+  {
+    tripId: "t-alld-del-00a",
+    busId: "b-046",
+    routeId: "r-alld-del",
+    direction: "forward",
+    progress: 0,
+    speed: 0,
+    fillRatio: 0.20,
+    status: "scheduled",
+    phase: "scheduled",
+  },
+  {
+    tripId: "t-alld-del-00b",
+    busId: "b-047",
+    routeId: "r-alld-del",
+    direction: "forward",
+    progress: 0,
+    speed: 0,
+    fillRatio: 0.70,
+    status: "boarding",
+    phase: "boarding",
+  },
 
   // Phase 1 – Just left Prayagraj Bus Stand
   {
