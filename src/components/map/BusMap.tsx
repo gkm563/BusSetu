@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLiveStore } from "@/store/useLiveStore";
 import { useUiStore } from "@/store/useUiStore";
 import { TripMarker } from "./TripMarker";
+import { Layers, Satellite, Activity, MapPin, Route } from "lucide-react";
 import { userDivIcon } from "./busIcon";
 import { StopMarker } from "./StopMarker";
 import { SelectedTripFollower } from "./SelectedTripFollower";
@@ -413,6 +414,74 @@ export function BusMap() {
         <SelectedTripFollower />
 
       </MapContainer>
+
+      {/* Floating Bottom-Center Map Layer Controller */}
+      <div className="absolute bottom-6 left-1/2 z-[500] -translate-x-1/2 pointer-events-auto">
+        <div className="flex items-center gap-1.5 rounded-full border border-border/60 bg-background/80 px-2 py-1.5 shadow-xl backdrop-blur-md">
+          {/* Label */}
+          <span className="mx-2 hidden items-center gap-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground sm:inline-flex">
+            <Layers className="h-3.5 w-3.5" />
+            Layers
+          </span>
+          <span className="mx-0.5 hidden h-4 w-px bg-border/60 sm:block" />
+
+          {/* Satellite Toggle */}
+          <button
+            onClick={() => setBaseLayer(baseLayer === "standard" ? "satellite" : "standard")}
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-extrabold transition-all cursor-pointer ${
+              baseLayer === "satellite"
+                ? "bg-gradient-to-r from-sky-400 to-indigo-500 text-white shadow-md shadow-sky-500/20"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground"
+            }`}
+            title="Toggle Satellite Imagery"
+          >
+            <Satellite className="h-3.5 w-3.5" />
+            <span>Satellite</span>
+          </button>
+
+          {/* Traffic Toggle */}
+          <button
+            onClick={() => setShowTraffic((v) => !v)}
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-extrabold transition-all cursor-pointer ${
+              showTraffic
+                ? "bg-gradient-to-r from-orange-400 to-amber-500 text-white shadow-md shadow-orange-500/20"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground"
+            }`}
+            title="Toggle Live Traffic Overlay"
+          >
+            <Activity className="h-3.5 w-3.5" />
+            <span>Traffic</span>
+          </button>
+
+          {/* Bus Stands Toggle */}
+          <button
+            onClick={() => setShowStops((v) => !v)}
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-extrabold transition-all cursor-pointer ${
+              showStops
+                ? "bg-gradient-to-r from-brand to-indigo-600 text-white shadow-md shadow-brand/20"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground"
+            }`}
+            title="Toggle Bus Stands"
+          >
+            <MapPin className="h-3.5 w-3.5" />
+            <span>Bus Stands</span>
+          </button>
+
+          {/* Route Trails Toggle */}
+          <button
+            onClick={() => setShowRoutes((v) => !v)}
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-extrabold transition-all cursor-pointer ${
+              showRoutes
+                ? "bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-md shadow-purple-500/20"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground"
+            }`}
+            title="Toggle Route Trails"
+          >
+            <Route className="h-3.5 w-3.5" />
+            <span>Routes</span>
+          </button>
+        </div>
+      </div>
 
       <MapSkeleton
         loading={!catalogsLoaded || !tripsLoaded}
