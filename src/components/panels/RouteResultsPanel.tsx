@@ -16,6 +16,7 @@ import {
   Users,
   X,
   Zap,
+  Bus,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -35,47 +36,47 @@ import { formatKm } from "@/utils/format";
 type Tab = "direct" | "transfer1" | "transfer2";
 
 const BADGE_META: Record<IntelligenceBadge, { Icon: LucideIcon; label: string; cls: string }> = {
-  best: { Icon: Trophy, label: "Best choice", cls: "bg-brand text-brand-foreground" },
-  fastest: { Icon: Zap, label: "Fastest", cls: "bg-warning/15 text-warning" },
-  most_seats: { Icon: Armchair, label: "Most seats", cls: "bg-brand/10 text-brand" },
-  closest: { Icon: Footprints, label: "Closest walk", cls: "bg-accent text-foreground" },
-  low_crowd: { Icon: Sparkles, label: "Low crowd", cls: "bg-success/15 text-success" },
+  best: { Icon: Trophy, label: "Best choice", cls: "bg-gradient-to-r from-amber-400 to-orange-500 text-white border-transparent" },
+  fastest: { Icon: Zap, label: "Fastest", cls: "bg-gradient-to-r from-rose-400 to-pink-500 text-white border-transparent" },
+  most_seats: { Icon: Armchair, label: "Most seats", cls: "bg-gradient-to-r from-blue-400 to-cyan-500 text-white border-transparent" },
+  closest: { Icon: Footprints, label: "Closest walk", cls: "bg-gradient-to-r from-purple-400 to-fuchsia-500 text-white border-transparent" },
+  low_crowd: { Icon: Sparkles, label: "Low crowd", cls: "bg-gradient-to-r from-emerald-400 to-teal-500 text-white border-transparent" },
 };
 
 const STATUS_META: Record<SmartStatus, { label: string; cls: string; Icon: LucideIcon }> = {
   approaching_pickup: {
     label: "Approaching pickup",
-    cls: "bg-brand/10 text-brand",
+    cls: "bg-blue-100 text-blue-700 border-blue-200",
     Icon: MapPin,
   },
   coming_towards: {
     label: "Coming towards you",
-    cls: "bg-success/15 text-success",
+    cls: "bg-emerald-100 text-emerald-700 border-emerald-200",
     Icon: Compass,
   },
   moving_away: {
     label: "Moving away",
-    cls: "bg-muted text-muted-foreground",
+    cls: "bg-slate-100 text-slate-600 border-slate-200",
     Icon: ArrowRight,
   },
   already_crossed: {
     label: "Already crossed",
-    cls: "bg-muted text-muted-foreground",
+    cls: "bg-slate-100 text-slate-500 border-slate-200",
     Icon: X,
   },
   stopped: {
     label: "Stopped",
-    cls: "bg-warning/15 text-warning",
+    cls: "bg-amber-100 text-amber-700 border-amber-200",
     Icon: Clock,
   },
   delayed: {
     label: "Delayed",
-    cls: "bg-warning/15 text-warning",
+    cls: "bg-rose-100 text-rose-700 border-rose-200",
     Icon: Timer,
   },
   completed: {
     label: "Trip completed",
-    cls: "bg-muted text-muted-foreground",
+    cls: "bg-slate-100 text-slate-500 border-slate-200",
     Icon: CircleCheck,
   },
 };
@@ -120,7 +121,7 @@ export function RouteResultsPanel() {
         transition={{ type: "spring", damping: 26, stiffness: 260 }}
         role="region"
         aria-label="Route intelligence results"
-        className="glass-panel pointer-events-auto flex w-[min(420px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl border border-border/60 shadow-2xl"
+        className="bg-background pointer-events-auto flex max-h-[calc(100vh-8rem)] w-[min(420px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl border shadow-2xl"
       >
         {/* Header */}
         <div className="flex items-start justify-between gap-3 border-b border-border/60 p-3.5">
@@ -134,17 +135,7 @@ export function RouteResultsPanel() {
               <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
               <span className="rounded-lg bg-brand/10 text-brand px-2 py-0.5 border border-brand/20">{routeQuery.to || "Any"}</span>
             </div>
-            {routeQuery.departAt && (
-              <div className="mt-0.5 flex items-center gap-1 text-[10px] text-muted-foreground">
-                <Clock className="h-3 w-3" aria-hidden />
-                Leaves{" "}
-                {new Date(routeQuery.departAt).toLocaleString([], {
-                  weekday: "short",
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}
-              </div>
-            )}
+            {/* Removed Leaves info */}
           </div>
           <button
             onClick={() => {
@@ -161,27 +152,52 @@ export function RouteResultsPanel() {
         {!result ? null : (
           <>
             {result.summary && <SummaryStrip summary={result.summary} />}
-            <Tabs tab={tab} counts={availableTabs} onChange={setTab} />
 
             <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-2.5">
-              {tab === "direct" && (
-                <DirectList
-                  items={result.direct}
-                  selectedTripId={selectedTripId}
-                  onSelect={(r) => {
-                    selectTrip(r.trip.tripId);
-                    focusRoute(r.route.id);
-                    toast.success(`Tracking ${r.bus.busNumber}`, {
-                      description: `${r.boardingStop.name} → ${r.alightingStop.name}`,
-                      duration: 2200,
-                    });
-                  }}
-                />
-              )}
-              {tab === "transfer1" && <TransferList plans={result.transfers1} />}
-              {tab === "transfer2" && <TransferList plans={result.transfers2} />}
+              <DirectList
+                items={[...result.direct].sort((a, b) => {
+                  const getGroup = (rec: BusRecommendation) => {
+                    if (rec.status === "completed" || rec.trip.routeProgress >= 1.0) return 3;
+                    
+                    // Calculate user reference progress based on closest stop
+                    let userStopIndex = rec.boardingStopIndex;
+                    if (location) {
+                      let minDistance = Infinity;
+                      rec.route.stops.forEach((stop, idx) => {
+                        const d = Math.sqrt(Math.pow(stop.lat - location.lat, 2) + Math.pow(stop.lng - location.lng, 2));
+                        if (d < minDistance) {
+                          minDistance = d;
+                          userStopIndex = idx;
+                        }
+                      });
+                    }
+                    const userProgress = rec.route.stops.length <= 1 ? 0 : userStopIndex / (rec.route.stops.length - 1);
+                    
+                    const isPast = rec.status === "already_crossed" || rec.status === "moving_away" || rec.trip.routeProgress > userProgress + 0.02;
+                    if (isPast) return 2;
+                    
+                    return 1;
+                  };
+                  
+                  const groupA = getGroup(a);
+                  const groupB = getGroup(b);
+                  
+                  if (groupA !== groupB) return groupA - groupB;
+                  
+                  return a.trip.routeProgress - b.trip.routeProgress;
+                })}
+                selectedTripId={selectedTripId}
+                onSelect={(r) => {
+                  selectTrip(r.trip.tripId);
+                  focusRoute(r.route.id);
+                  toast.success(`Tracking ${r.bus.busNumber}`, {
+                    description: `${r.boardingStop.name} → ${r.alightingStop.name}`,
+                    duration: 2200,
+                  });
+                }}
+              />
 
-              {tab === "direct" && result.direct.length === 0 && result.isUnresolved && (
+              {result.direct.length === 0 && result.isUnresolved && (
                 <EmptyResult />
               )}
             </div>
@@ -194,18 +210,9 @@ export function RouteResultsPanel() {
 
 function SummaryStrip({ summary }: { summary: RouteSummary }) {
   return (
-    <div className="grid grid-cols-3 gap-1.5 border-b border-border/60 bg-muted/30 p-2.5 text-center">
+    <div className="grid grid-cols-2 gap-2 border-b border-border/60 bg-muted/30 p-2.5 text-center">
       <SummaryCell Icon={RouteIcon} label="Distance" value={formatKm(summary.legDistanceKm)} />
       <SummaryCell Icon={Clock} label="Est. time" value={`${summary.estimatedMin} min`} />
-      <SummaryCell
-        Icon={Timer}
-        label="Delay"
-        value={summary.expectedDelayMin > 0 ? `+${summary.expectedDelayMin}m` : "on time"}
-        tone={summary.expectedDelayMin > 5 ? "warn" : "muted"}
-      />
-      <SummaryCell Icon={Users} label="Occupancy" value={`${summary.avgOccupancyPct}%`} />
-      <SummaryCell Icon={Gauge} label="Avg speed" value={`${summary.avgSpeedKmh} km/h`} />
-      <SummaryCell Icon={MapPin} label="Stops" value={`${summary.stopsInLeg}`} />
     </div>
   );
 }
@@ -334,120 +341,156 @@ function RecommendationCard({
   selected: boolean;
   onSelect: () => void;
 }) {
-  const status = STATUS_META[rec.status];
-  const StatusIcon = status.Icon;
   const muted = rec.status === "already_crossed" || rec.status === "completed";
   const progress = Math.round(rec.trip.routeProgress * 100);
+  const totalStops = rec.route.stops.length;
+  const originName = rec.route.stops[0]?.name || "Origin";
+  const destName = rec.route.stops[totalStops - 1]?.name || "Destination";
+
+  const getStatusDetails = (status: typeof rec.status) => {
+    if (rec.trip.status === "scheduled" || (rec.trip.routeProgress === 0 && rec.trip.status === "boarding")) {
+      return {
+        label: "Not Started Yet",
+        cls: "bg-slate-500 text-white border-transparent",
+      };
+    }
+
+    switch (status) {
+      case "approaching_pickup":
+        return {
+          label: "Arriving Soon",
+          cls: "bg-blue-600 text-white border-transparent",
+        };
+      case "coming_towards":
+        return {
+          label: "Coming Towards You",
+          cls: "bg-emerald-600 text-white border-transparent",
+        };
+      case "already_crossed":
+      case "moving_away":
+        return {
+          label: "Crossed You",
+          cls: "bg-rose-600 text-white border-transparent", // high contrast red
+        };
+      case "stopped":
+        return {
+          label: "Stopped",
+          cls: "bg-amber-600 text-white border-transparent",
+        };
+      case "delayed":
+        return {
+          label: "Delayed",
+          cls: "bg-rose-700 text-white border-transparent",
+        };
+      case "completed":
+        return {
+          label: "Reached Destination",
+          cls: "bg-slate-600 text-white border-transparent",
+        };
+      default:
+        return {
+          label: "En Route",
+          cls: "bg-indigo-600 text-white border-transparent",
+        };
+    }
+  };
+
+  const statusInfo = getStatusDetails(rec.status);
+  
+  const departureTime = new Date(rec.trip.scheduledStart).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const arrivalTime = new Date(rec.trip.scheduledEnd).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const fare = rec.bus.busType === "ac" || rec.bus.busType === "sleeper" ? 350 : 180;
+
   return (
     <li>
       <button
         onClick={onSelect}
         aria-pressed={selected}
-        className={`group w-full rounded-2xl border p-3.5 text-left transition-all flex flex-col gap-3 ${
+        className={`group relative w-full overflow-hidden rounded-3xl border-2 p-5 text-left transition-all duration-300 flex flex-col gap-4 ${
           selected
-            ? "border-brand bg-brand/10 shadow-md ring-2 ring-brand/10"
+            ? "border-emerald-500 bg-gradient-to-br from-emerald-50 to-white shadow-2xl ring-2 ring-emerald-200 scale-[1.02]"
             : muted
-              ? "border-border/40 bg-card/40 opacity-60 hover:opacity-100"
-              : "border-border/60 bg-card/80 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-md"
+              ? "border-slate-200 bg-slate-50/70 opacity-80 hover:opacity-100"
+              : "border-slate-200 bg-white shadow-lg hover:-translate-y-1 hover:border-emerald-400 hover:shadow-xl"
         }`}
       >
-        {/* Header segment */}
-        <div className="flex items-center justify-between gap-3 w-full">
-          <div className="min-w-0 flex-1 space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="bg-brand/10 text-brand px-2 py-0.5 rounded-lg border border-brand/20 text-xs font-mono font-extrabold uppercase tracking-wider">
-                📋 {rec.bus.busNumber}
-              </span>
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${status.cls}`}
-              >
-                <StatusIcon className="h-3 w-3" aria-hidden />
-                {status.label}
-              </span>
-            </div>
-            <div className="truncate text-xs font-semibold text-muted-foreground/80">
-              {rec.operator.name} · <span className="text-foreground">{rec.route.name}</span>
-            </div>
-          </div>
-          
-          <div className="shrink-0 rounded-xl bg-brand/5 border border-brand/10 p-2 text-center min-w-[75px]">
-            <div className="font-mono text-sm font-black text-brand leading-none">
-              {formatSec(rec.etaToBoardingSec)}
-            </div>
-            <div className="text-[8px] text-muted-foreground uppercase font-bold tracking-wider mt-1">pickup</div>
-          </div>
-        </div>
-
-        {/* Badges segment */}
-        {rec.badges.length > 0 && (
-          <div className="flex flex-wrap gap-1 border-t border-border/40 pt-2.5">
-            {rec.badges.map((b) => {
-              const meta = BADGE_META[b];
-              const Icon = meta.Icon;
-              return (
-                <span
-                  key={b}
-                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold ${meta.cls}`}
-                >
-                  <Icon className="h-3 w-3" aria-hidden />
-                  {meta.label}
-                </span>
-              );
-            })}
-          </div>
+        {selected && (
+           <div className="absolute left-0 top-0 bottom-0 w-2 bg-gradient-to-b from-emerald-500 to-teal-400" />
         )}
 
-        {/* Metrics segment */}
-        <div className="grid grid-cols-4 gap-2 text-[10px] bg-muted/40 rounded-xl p-2.5 border border-border/40">
-          <Metric
-            Icon={Footprints}
-            label={`${formatKm(rec.walkingKm)} (${rec.walkingMin}m)`}
-            tone={rec.walkingKm > 1.5 ? "warn" : "default"}
-          />
-          <Metric
-            Icon={Armchair}
-            label={`${rec.seatsAvailable} seats`}
-            tone={rec.seatsAvailable === 0 ? "warn" : "default"}
-          />
-          <Metric Icon={Users} label={`${rec.occupancyPct}% crowd`} />
-          <Metric Icon={Gauge} label={`${Math.round(rec.trip.gps.speed)} km/h`} />
-        </div>
-
-        {/* Progress & stops segment */}
-        <div className="space-y-2 w-full pt-1">
-          <div className="flex items-center gap-2 text-[10px] text-muted-foreground/90">
-            <MapPin className="h-3.5 w-3.5 text-brand shrink-0" aria-hidden />
-            <div className="min-w-0 flex-1 truncate">
-              <span className="font-bold text-foreground">{rec.boardingStop.name}</span>
-              <span className="mx-1 text-muted-foreground/45">→</span>
-              <span className="font-bold text-foreground">{rec.alightingStop.name}</span>
+        {/* Header Section */}
+        <div className="flex items-start justify-between w-full">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-500 text-white p-3 rounded-2xl shadow-md transform group-hover:scale-110 transition-transform">
+              <Bus className="w-6 h-6" />
+            </span>
+            <div className="space-y-0.5">
+               <div className="text-xl font-black text-slate-800 tracking-tight">
+                 {rec.bus.busNumber}
+               </div>
+               <div className="text-[13px] font-bold text-slate-500 flex items-center gap-1">
+                 🏢 {rec.operator.name}
+               </div>
             </div>
           </div>
           
-          <div className="space-y-1">
-            <div className="relative h-2 overflow-hidden rounded-full bg-muted border border-border/30">
+          <div className="flex flex-col items-end gap-2 shrink-0">
+             <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm ${statusInfo.cls}`}>
+                {statusInfo.label}
+             </span>
+             <span className="text-[14px] font-extrabold text-emerald-700 bg-emerald-100/80 px-2.5 py-0.5 rounded-lg border border-emerald-200 shadow-sm">
+               {progress}% Live
+             </span>
+          </div>
+        </div>
+
+        {/* Progress Bar & Stations */}
+        <div className="w-full bg-slate-50 p-4 rounded-2xl border border-slate-200/80 shadow-inner flex flex-col gap-3">
+          <div className="flex items-start justify-between text-xs font-bold text-slate-700 gap-4">
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="text-slate-400 text-[9px] font-bold uppercase tracking-wider">Origin</span>
+              <span className="truncate text-[13px] font-black text-slate-800">🏁 {originName}</span>
+              <span className="text-[10px] text-slate-400 font-semibold mt-0.5">{departureTime}</span>
+            </div>
+            
+            <div className="flex items-center justify-center pt-3 text-slate-300 shrink-0">
+              <ArrowRight className="w-4 h-4" />
+            </div>
+
+            <div className="flex flex-col min-w-0 flex-1 text-right">
+              <span className="text-slate-400 text-[9px] font-bold uppercase tracking-wider">Destination</span>
+              <span className="truncate text-[13px] font-black text-slate-800">{destName} 📍</span>
+              <span className="text-[10px] text-slate-400 font-semibold mt-0.5">{arrivalTime}</span>
+            </div>
+          </div>
+
+          <div className="relative pt-1">
+            <div className="relative h-3 overflow-hidden rounded-full bg-slate-200 shadow-inner border border-slate-300/60">
               <div
-                className="absolute inset-y-0 left-0 rounded-full bg-brand transition-all duration-500"
+                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-500 ease-out"
                 style={{ width: `${progress}%` }}
-                aria-label={`Trip progress ${progress}%`}
-              />
-            </div>
-            <div className="flex items-center justify-between text-[9px] font-bold text-muted-foreground uppercase tracking-wide">
-              <span>{formatKm(rec.distanceFromUserKm)} away</span>
-              <span className="text-brand">{progress}% traveled</span>
+              >
+                <div className="absolute right-0 top-0 bottom-0 w-2 bg-white/60 animate-ping rounded-full" />
+                <div className="absolute inset-0 bg-white/20 w-full animate-pulse" />
+              </div>
             </div>
           </div>
         </div>
 
-        {rec.catchable && !muted && (
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-success/15 border border-success/20 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-success">
-            <CircleCheck className="h-3 w-3" aria-hidden /> You can catch this bus
-          </div>
-        )}
+        {/* Footer Details - Seats and Fare */}
+        <div className="flex items-center justify-between w-full border-t border-slate-100 pt-3">
+          <span className="text-[13px] text-slate-600 font-extrabold flex items-center gap-1.5">
+            <span className="text-lg">💺</span> {rec.seatsAvailable} Seats Left <span className="text-slate-300">|</span> <span className="text-slate-400 text-[12px] font-medium">Total {rec.bus.totalSeats}</span>
+          </span>
+          <span className="text-violet-700 bg-violet-50 border-2 border-violet-200 px-3 py-1 rounded-xl text-xs font-black shadow-sm tracking-wide">
+            Ticket: ₹{fare}
+          </span>
+        </div>
       </button>
     </li>
   );
 }
+
 
 function Metric({
   Icon,
@@ -460,12 +503,12 @@ function Metric({
 }) {
   return (
     <div
-      className={`flex items-center justify-center gap-1 rounded-lg px-1.5 py-1 ${
-        tone === "warn" ? "bg-warning/10 text-warning" : "bg-muted/50 text-muted-foreground"
+      className={`flex flex-1 flex-col items-center justify-center gap-1 rounded-xl p-1.5 transition-colors ${
+        tone === "warn" ? "bg-warning/10 text-warning border border-warning/20" : "bg-card/40 text-muted-foreground border border-border/40 hover:bg-muted/80"
       }`}
     >
-      <Icon className="h-3 w-3" aria-hidden />
-      <span className="truncate">{label}</span>
+      <Icon className="h-3.5 w-3.5" aria-hidden />
+      <span className="text-[10px] font-semibold tracking-tight whitespace-nowrap">{label}</span>
     </div>
   );
 }

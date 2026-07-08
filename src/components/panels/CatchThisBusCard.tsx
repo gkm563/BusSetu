@@ -36,8 +36,34 @@ export function CatchThisBusCard({ onOpen }: { onOpen: () => void }) {
     [view, location],
   );
 
+  const { userStopIndex, userProgress } = useMemo(() => {
+    if (!view || !location) return { userStopIndex: 0, userProgress: 0 };
+    let minDistance = Infinity;
+    let idx = 0;
+    view.route.stops.forEach((stop, i) => {
+      const d = Math.sqrt(Math.pow(stop.lat - location.lat, 2) + Math.pow(stop.lng - location.lng, 2));
+      if (d < minDistance) {
+        minDistance = d;
+        idx = i;
+      }
+    });
+    const progress = view.route.stops.length <= 1 ? 0 : idx / (view.route.stops.length - 1);
+    return { userStopIndex: idx, userProgress: progress };
+  }, [view, location]);
+
+  const hasCrossed = view ? view.trip.routeProgress > userProgress + 0.02 : false;
+
+  const catchStatus: "safe" | "tight" | "missed" =
+    !view
+      ? "missed"
+      : view.trip.status === "completed" || hasCrossed
+        ? "missed"
+        : view.trip.currentStopId === view.route.stops[userStopIndex]?.id
+          ? "tight"
+          : "safe";
+
   const alternative = useMemo(() => {
-    if (!location || !view || !assessment || assessment.catchable) return null;
+    if (!location || !view || !assessment || catchStatus !== "missed") return null;
     return CatchService.recommendAlternative(
       nearby.map((n) => ({
         trip: n.trip,
@@ -48,16 +74,9 @@ export function CatchThisBusCard({ onOpen }: { onOpen: () => void }) {
       location,
       view.trip.tripId,
     );
-  }, [assessment, location, nearby, view]);
+  }, [assessment, location, nearby, view, catchStatus]);
 
   if (!view || !location || !assessment) return null;
-
-  const catchStatus: "safe" | "tight" | "missed" =
-    assessment.slackSec < -90
-      ? "missed"
-      : assessment.slackSec < 60
-        ? "tight"
-        : "safe";
 
   return (
     <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-card to-card/50 p-3.5 shadow-sm">
@@ -240,12 +259,31 @@ export function CatchThisBusModal({ isOpen, onClose }: { isOpen: boolean; onClos
 
   if (!view || !location || !assessment) return null;
 
+  const { userStopIndex, userProgress } = useMemo(() => {
+    if (!view || !location) return { userStopIndex: 0, userProgress: 0 };
+    let minDistance = Infinity;
+    let idx = 0;
+    view.route.stops.forEach((stop, i) => {
+      const d = Math.sqrt(Math.pow(stop.lat - location.lat, 2) + Math.pow(stop.lng - location.lng, 2));
+      if (d < minDistance) {
+        minDistance = d;
+        idx = i;
+      }
+    });
+    const progress = view.route.stops.length <= 1 ? 0 : idx / (view.route.stops.length - 1);
+    return { userStopIndex: idx, userProgress: progress };
+  }, [view, location]);
+
+  const hasCrossed = view ? view.trip.routeProgress > userProgress + 0.02 : false;
+
   const catchStatus: "safe" | "tight" | "missed" =
-    assessment.slackSec < -90
+    !view
       ? "missed"
-      : assessment.slackSec < 60
-        ? "tight"
-        : "safe";
+      : view.trip.status === "completed" || hasCrossed
+        ? "missed"
+        : view.trip.currentStopId === view.route.stops[userStopIndex]?.id
+          ? "tight"
+          : "safe";
 
   const handleClose = () => {
     setBookingStep("details");

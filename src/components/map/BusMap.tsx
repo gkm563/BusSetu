@@ -12,6 +12,7 @@ import { routeService } from "@/services";
 import { splitRouteAtProgress } from "@/utils/routeSlice";
 import { useSmartDiscovery } from "@/hooks/useSmartDiscovery";
 import { useGeolocation } from "@/hooks/useGeolocation";
+import { useRouteIntelligence } from "@/hooks/useRouteIntelligence";
 import type { Trip } from "@/types/trip";
 import L from "leaflet";
 
@@ -69,12 +70,16 @@ function ClusterRenderer({
   tripsById,
   nearbyTripIds,
   activeRouteIdSet,
+  directTripIds,
+  routeQueryActive,
 }: {
   zoom: number;
   tripIdList: string[];
   tripsById: Record<string, Trip>;
   nearbyTripIds: Set<string>;
   activeRouteIdSet: Set<string>;
+  directTripIds: Set<string>;
+  routeQueryActive: boolean;
 }) {
   const map = useMap();
 
@@ -84,8 +89,11 @@ function ClusterRenderer({
       .map((id) => tripsById[id])
       .filter((t): t is Trip => !!t)
       .filter((t) => {
-        // 1. If route search is active, show only buses on this route
+        // 1. If route search is active, show only buses that are in the direct recommendations list
         if (activeRouteIdSet.size > 0) {
+          if (routeQueryActive) {
+            return directTripIds.has(t.tripId);
+          }
           return activeRouteIdSet.has(t.routeId);
         }
         // 2. If user location is active, show nearby buses only
@@ -205,6 +213,12 @@ export function BusMap() {
   const { location: userLocation } = useGeolocation();
   const discovery = useSmartDiscovery(userLocation, discoveryRadiusKm);
   const nearbyTripIds = useMemo(() => new Set(discovery.map((d) => d.trip.tripId)), [discovery]);
+  const routeIntelligence = useRouteIntelligence(userLocation);
+  
+  const directTripIds = useMemo(() => {
+    if (!routeIntelligence) return new Set<string>();
+    return new Set(routeIntelligence.direct.map((d) => d.trip.tripId));
+  }, [routeIntelligence]);
 
   const [showStops, setShowStops] = useState(true);
   const [showRoutes, setShowRoutes] = useState(true);
@@ -367,6 +381,8 @@ export function BusMap() {
           tripsById={tripsById}
           nearbyTripIds={nearbyTripIds}
           activeRouteIdSet={activeRouteIdSet}
+          directTripIds={directTripIds}
+          routeQueryActive={routeQuery.active}
         />
 
         {/* User Pulsing Dot (Represented directly from the hook) */}

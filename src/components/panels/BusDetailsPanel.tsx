@@ -44,6 +44,7 @@ import { formatEta, formatKm, formatRelative } from "@/utils/format";
 import { CatchThisBusCard, CatchThisBusModal } from "./CatchThisBusCard";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { CatchService } from "@/services/discovery/CatchService";
+import { haversineKm } from "@/utils/geo";
 const FAV_KEY = "bussetu.favoriteTrips";
 
 function useFavorite(tripId: string | null) {
@@ -157,13 +158,33 @@ function PanelBody({
   );
 
   const { location } = useGeolocation();
-  const assessment = useMemo(
-    () => (view && location ? CatchService.assess({ view, user: location }) : null),
-    [view, location],
-  );
-  // If no location (e.g. permission denied) we assume bookable.
-  // Otherwise if slackSec < -90, the bus has passed the nearest stop.
-  const isBookable = !assessment || assessment.slackSec >= -90;
+  const distanceToUserKm = useMemo(() => {
+    if (!view || !location) return null;
+    return haversineKm(
+      { lat: location.lat, lng: location.lng },
+      { lat: trip.gps.latitude, lng: trip.gps.longitude }
+    );
+  }, [view, location, trip.gps.latitude, trip.gps.longitude]);
+
+  const isBookable = useMemo(() => {
+    if (!view) return false;
+    if (view.trip.status === "completed") return false;
+    
+    let userStopIndex = 0;
+    if (location) {
+      let minDistance = Infinity;
+      view.route.stops.forEach((stop, idx) => {
+        const d = Math.sqrt(Math.pow(stop.lat - location.lat, 2) + Math.pow(stop.lng - location.lng, 2));
+        if (d < minDistance) {
+          minDistance = d;
+          userStopIndex = idx;
+        }
+      });
+    }
+    
+    const userProgress = view.route.stops.length <= 1 ? 0 : userStopIndex / (view.route.stops.length - 1);
+    return view.trip.routeProgress <= userProgress + 0.02;
+  }, [view, location]);
 
   return (
     <>
@@ -175,6 +196,7 @@ function PanelBody({
           trip={trip}
           nextStopName={nextStopName}
           nextStopEta={nextStopEta}
+          distanceToUserKm={distanceToUserKm}
         />
 
         {/* 2. Current Stop & Next Stop */}
@@ -379,10 +401,12 @@ function EtaDelayBanner({
   trip,
   nextStopName,
   nextStopEta,
+  distanceToUserKm,
 }: {
   trip: LiveBusView["trip"];
   nextStopName?: string;
   nextStopEta?: string;
+  distanceToUserKm: number | null;
 }) {
   const isDelayed = typeof trip.delay === "number" && trip.delay > 0;
   return (
@@ -415,6 +439,12 @@ function EtaDelayBanner({
           to reach {nextStopName ?? "next stop"}
         </span>
       </div>
+      {distanceToUserKm !== null && (
+        <div className="mt-2 text-xs font-extrabold text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-2.5 py-1.5 inline-flex items-center gap-1.5 w-fit shadow-sm">
+          <span>🚌</span>
+          <span>{distanceToUserKm.toFixed(2)} km away from you</span>
+        </div>
+      )}
     </div>
   );
 }

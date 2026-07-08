@@ -37,9 +37,19 @@ function createMockTripAdapter(): TripService {
       trip.routeProgress = Math.min(1, trip.routeProgress + delta);
 
       if (trip.routeProgress >= 1) {
-        // Loop the trip so the radar stays lively without new seeding.
-        trip.routeProgress = 0;
-        trip.direction = trip.direction === "forward" ? "reverse" : "forward";
+        trip.routeProgress = 1;
+        if (trip.status !== "completed") {
+          trip.status = "completed";
+          trip.gps.speed = 0;
+          emit({
+            type: "status",
+            tripId: trip.tripId,
+            patch: {
+              status: "completed",
+              lastUpdated: new Date(now).toISOString(),
+            },
+          });
+        }
       }
 
       const poly = directionalPolyline(trip.routeId, trip.direction);

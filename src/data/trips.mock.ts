@@ -34,109 +34,103 @@ interface Seed {
 const SEEDS: Seed[] = [
   // ════════════════════════════════════════════════════════════
   // ROUTE 1: Prayagraj → Lucknow  (r-alld-lko)
-  // User city = Prayagraj (origin). "Crossing user" = just departed.
   // ════════════════════════════════════════════════════════════
 
-  // Phase 1 – Just departed Prayagraj bus stand
+  // 1. At Prayagraj Station
   {
     tripId: "t-alld-lko-01",
     busId: "b-001",
     routeId: "r-alld-lko",
     direction: "forward",
-    progress: 0.04,
-    speed: 38,
-    fillRatio: 0.88, // full bus, just boarded
-    status: "running",
-    phase: "just_departed",
+    progress: 0.0,
+    speed: 0,
+    fillRatio: 0.80,
+    status: "boarding",
+    phase: "at_origin",
   },
+  // 2. Between Prayagraj & Pratapgarh (Coming towards user) - Bus A
   {
     tripId: "t-alld-lko-02",
     busId: "b-002",
     routeId: "r-alld-lko",
     direction: "forward",
-    progress: 0.09,
-    speed: 45,
-    fillRatio: 0.72,
+    progress: 0.08,
+    speed: 48,
+    fillRatio: 0.70,
     status: "running",
-    phase: "just_departed",
+    phase: "coming_towards",
   },
-
-  // Phase 2 – En route early (approaching Phulpur)
+  // 3. Between Prayagraj & Pratapgarh (Coming towards user) - Bus B
   {
     tripId: "t-alld-lko-03",
     busId: "b-003",
     routeId: "r-alld-lko",
     direction: "forward",
-    progress: 0.20,
-    speed: 54,
+    progress: 0.16,
+    speed: 52,
     fillRatio: 0.65,
     status: "running",
-    phase: "en_route_early",
+    phase: "coming_towards",
   },
-
-  // Phase 3 – Stopped at Pratapgarh (boarding)
+  // 4. Between Prayagraj & Pratapgarh (Coming towards user) - Bus C
   {
     tripId: "t-alld-lko-04",
     busId: "b-004",
     routeId: "r-alld-lko",
     direction: "forward",
-    progress: 0.35,
-    speed: 0,
-    fillRatio: 0.80,
-    status: "boarding",
-    phase: "at_midstop",
+    progress: 0.25,
+    speed: 55,
+    fillRatio: 0.75,
+    status: "running",
+    phase: "coming_towards",
   },
-
-  // Phase 4 – Mid-route running (between Pratapgarh and Amethi)
+  // 5. Past Pratapgarh (already passed Pratapgarh) - Bus A
   {
     tripId: "t-alld-lko-05",
     busId: "b-005",
     routeId: "r-alld-lko",
     direction: "forward",
-    progress: 0.50,
+    progress: 0.45,
     speed: 60,
     fillRatio: 0.55,
     status: "running",
-    phase: "mid_route",
+    phase: "already_passed",
   },
-
-  // Phase 5 – Approaching Raebareli (delayed)
+  // 6. Past Pratapgarh (already passed Pratapgarh) - Bus B
   {
     tripId: "t-alld-lko-06",
     busId: "b-006",
     routeId: "r-alld-lko",
     direction: "forward",
-    progress: 0.68,
-    speed: 35,
-    fillRatio: 1.10, // overcrowded
-    status: "delayed",
-    phase: "past_midpoint",
+    progress: 0.65,
+    speed: 58,
+    fillRatio: 0.85,
+    status: "running",
+    phase: "already_passed",
   },
-
-  // Phase 6 – Approaching Lucknow outskirts
+  // 7. Near Lucknow
   {
     tripId: "t-alld-lko-07",
     busId: "b-007",
     routeId: "r-alld-lko",
     direction: "forward",
-    progress: 0.85,
-    speed: 48,
+    progress: 0.88,
+    speed: 45,
     fillRatio: 0.45,
     status: "running",
-    phase: "approaching_end",
+    phase: "near_destination",
   },
-
-  // Phase 7 – Arriving at Lucknow Charbagh
+  // 8. Reached at Lucknow (completed)
   {
     tripId: "t-alld-lko-08",
     busId: "b-008",
     routeId: "r-alld-lko",
     direction: "forward",
-    progress: 0.95,
-    speed: 22,
-    fillRatio: 0.40,
-    status: "running",
-    phase: "arriving",
+    progress: 1.0,
+    speed: 0,
+    fillRatio: 0.0,
+    status: "completed",
+    phase: "reached_destination",
   },
 
   // ════════════════════════════════════════════════════════════

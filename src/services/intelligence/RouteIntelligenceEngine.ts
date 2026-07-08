@@ -293,6 +293,25 @@ export function rankTripsForRoute(
     : 0;
   const walkingMin = Math.round((walkingKm / WALKING_SPEED_KMH) * 60);
 
+  // We determine the reference stop for "already crossed" calculations.
+  // If the user's physical location is available, we find the stop on the route
+  // closest to the user. This is the user's physical "boarding stop" context.
+  // Otherwise, we fallback to the searched boarding stop.
+  let referenceStop = boardingStop;
+  let referenceStopIndex = boardingStopIndex;
+  if (userLocation) {
+    let minDistance = Infinity;
+    route.stops.forEach((stop, idx) => {
+      const d = haversineKm(userLocation, { lat: stop.lat, lng: stop.lng });
+      if (d < minDistance) {
+        minDistance = d;
+        referenceStop = stop;
+        referenceStopIndex = idx;
+      }
+    });
+  }
+  const referenceProgress = totalStops <= 1 ? 0 : referenceStopIndex / (totalStops - 1);
+
   const out: BusRecommendation[] = [];
   for (const trip of tripsOnRoute) {
     const b = bus(trip.busId);
@@ -311,7 +330,7 @@ export function rankTripsForRoute(
       ? Math.max(0, Math.round((new Date(etaIso).getTime() - Date.now()) / 1000))
       : null;
 
-    const status = computeSmartStatus(trip, boardingStop.id, boardingProgress);
+    const status = computeSmartStatus(trip, referenceStop.id, referenceProgress);
     const seatsAvailable = trip.passenger.vacantSeats;
     const occupancyPct = Math.round(occupancyRatio(trip, b) * 100);
     const delayMin = trip.delay ?? 0;
