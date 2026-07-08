@@ -20,7 +20,7 @@ export function Hero() {
       >
         <h1 className="text-4xl md:text-5xl lg:text-[56px] font-bold tracking-tight text-foreground max-w-4xl mx-auto leading-tight">
           India's No. 1 online <br className="hidden md:block" />
-          bus ticket booking site
+          bus tracking platform
         </h1>
         <p className="mt-4 text-slate-500 font-semibold text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
           India's only bus tracking freely and booking anytime anywhere anyone
