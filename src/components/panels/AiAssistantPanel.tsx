@@ -70,7 +70,7 @@ export function AiAssistantPanel() {
       {/* Floating Toggle Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-24 right-4 z-[999] flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-brand to-indigo-600 p-0 shadow-xl shadow-brand/35 hover:shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer border border-white/20 group overflow-hidden"
+        className="fixed bottom-6 right-6 z-[999] flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-brand to-indigo-600 p-0 shadow-xl shadow-brand/35 hover:shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer border border-white/20 group overflow-hidden"
         aria-label="Open AI Assistant"
       >
         <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.2)_50%,transparent_75%)] bg-[length:250%_250%] animate-[shimmer_2s_infinite]" />
