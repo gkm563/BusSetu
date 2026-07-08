@@ -215,8 +215,7 @@ function PanelBody({
         {/* 5. Speed, Heading, GPS Accuracy */}
         <TelemetryCard trip={trip} />
 
-        {/* 6. Live Location Minimap */}
-        <LiveLocationMap view={view} />
+
 
         {/* 7. Timeline (checked ticks visual Allahabad -> Naini -> Mirzapur) */}
         <CompactTimeline view={view} onExpand={onOpenTimeline} />
