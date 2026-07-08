@@ -5,7 +5,7 @@ export type OccupancyLevel = "low" | "medium" | "high" | "packed";
 
 export function occupancyRatio(trip: Trip, bus: Bus): number {
   if (!trip || !bus || !bus.totalSeats) return 0;
-  return Math.min(1.4, (trip.occupiedSeats + trip.standingPassengers) / bus.totalSeats);
+  return Math.min(1.4, (trip.passenger.occupiedSeats + trip.passenger.standingPassengers) / bus.totalSeats);
 }
 
 export function occupancyLevel(trip: Trip, bus: Bus): OccupancyLevel {

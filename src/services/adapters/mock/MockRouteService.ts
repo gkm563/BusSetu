@@ -1,5 +1,5 @@
 import type { RouteSearchQuery, RouteService } from "@/services/contracts/RouteService";
-import { MOCK_ROUTES } from "@/data/mock/routes";
+import { MOCK_ROUTES } from "@/data/routes.mock";
 import { withLatency } from "./latency";
 
 function matches(stopName: string, needle: string) {

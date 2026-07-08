@@ -6,6 +6,14 @@ import type { GlobalSearchResult } from "@/services/contracts/SearchService";
 import { useUiStore } from "@/store/useUiStore";
 import { useLiveStore } from "@/store/useLiveStore";
 
+const POPULAR_SUGGESTIONS = [
+  { type: "stop", name: "Civil Lines Stop", subtitle: "Prayagraj" },
+  { type: "stop", name: "Prayagraj Junction", subtitle: "Railway Station" },
+  { type: "stop", name: "Naini Junction", subtitle: "Naini" },
+  { type: "route", name: "Prayagraj - Mirzapur Live Route", id: "route-1" },
+  { type: "bus", name: "UP 78 VW 6356 (AC Luxury)", id: "trip-3" },
+];
+
 export function GlobalSearch() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
@@ -43,9 +51,9 @@ export function GlobalSearch() {
   const hasResults =
     results.buses.length + results.routes.length + results.stops.length + results.cities.length > 0;
 
-  function goRadar() {
+  function goSearch() {
     setOpen(false);
-    navigate({ to: "/radar" });
+    navigate({ to: "/search" });
   }
 
   return (
@@ -65,13 +73,49 @@ export function GlobalSearch() {
         {q && (
           <button
             onClick={() => setQ("")}
-            className="text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground cursor-pointer"
             aria-label="Clear"
           >
             <X className="h-3.5 w-3.5" />
           </button>
         )}
       </div>
+
+      {open && q.length === 0 && (
+        <div className="glass-panel absolute left-0 right-0 top-[calc(100%+8px)] z-50 max-h-[70vh] overflow-y-auto rounded-2xl p-3 text-sm border border-border/60 shadow-lg">
+          <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Popular Searches
+          </div>
+          <div className="space-y-1">
+            {POPULAR_SUGGESTIONS.map((item, idx) => (
+              <button
+                key={idx}
+                type="button"
+                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left hover:bg-accent transition-colors cursor-pointer"
+                onClick={() => {
+                  if (item.type === "stop") {
+                    setQ(item.name);
+                  } else if (item.type === "route") {
+                    focusRoute(item.id!);
+                    goSearch();
+                  } else if (item.type === "bus") {
+                    selectTrip(item.id!);
+                    goSearch();
+                  }
+                }}
+              >
+                {item.type === "stop" && <MapPin className="h-3.5 w-3.5 text-brand" />}
+                {item.type === "route" && <RouteIcon className="h-3.5 w-3.5 text-brand" />}
+                {item.type === "bus" && <BusIcon className="h-3.5 w-3.5 text-brand" />}
+                <div>
+                  <div className="font-semibold text-xs text-foreground leading-none">{item.name}</div>
+                  {item.subtitle && <div className="text-[9px] text-muted-foreground mt-0.5">{item.subtitle}</div>}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {open && q.length > 0 && (
         <div className="glass-panel absolute left-0 right-0 top-[calc(100%+8px)] z-50 max-h-[70vh] overflow-y-auto rounded-2xl p-2 text-sm">
@@ -88,7 +132,7 @@ export function GlobalSearch() {
                     className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left hover:bg-accent"
                     onClick={() => {
                       if (trip) selectTrip(trip.tripId);
-                      goRadar();
+                      goSearch();
                     }}
                   >
                     <span className="font-medium">{b.busNumber}</span>
@@ -109,7 +153,7 @@ export function GlobalSearch() {
                   className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left hover:bg-accent"
                   onClick={() => {
                     focusRoute(r.id);
-                    goRadar();
+                    goSearch();
                   }}
                 >
                   <span className="font-medium">{r.name}</span>
@@ -125,7 +169,7 @@ export function GlobalSearch() {
                 <button
                   key={s.id}
                   className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left hover:bg-accent"
-                  onClick={goRadar}
+                  onClick={goSearch}
                 >
                   <span className="font-medium">{s.name}</span>
                   <span className="text-xs text-muted-foreground">{s.city}</span>
@@ -140,7 +184,7 @@ export function GlobalSearch() {
                 <button
                   key={c}
                   className="w-full rounded-lg px-3 py-2 text-left hover:bg-accent"
-                  onClick={goRadar}
+                  onClick={goSearch}
                 >
                   {c}
                 </button>

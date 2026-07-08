@@ -4,6 +4,9 @@ import { ArrowRight, Clock, MapPin, PlayCircle, Radar, Users } from "lucide-reac
 import { useState } from "react";
 import { HeroRadarInteractive, RadarDemoModal } from "./HeroRadarInteractive";
 
+import { useTranslation } from "@/hooks/useTranslation";
+import { RouteSearchPanel } from "@/components/panels/RouteSearchPanel";
+
 const TRUST = [
   { icon: Radar, label: "Live Tracking" },
   { icon: Clock, label: "Real-Time ETA" },
@@ -13,6 +16,7 @@ const TRUST = [
 
 export function Hero() {
   const [demoOpen, setDemoOpen] = useState(false);
+  const { t } = useTranslation();
   return (
     <section className="relative overflow-hidden pt-10 sm:pt-14 lg:pt-20">
       {/* Ambient background */}
@@ -50,34 +54,36 @@ export function Hero() {
             </div>
 
             <h1 className="mt-5 font-display text-[40px] font-semibold leading-[1.02] tracking-tight sm:text-6xl lg:text-[68px]">
-              Track any bus,{" "}
-              <span className="bg-gradient-to-r from-brand via-[oklch(0.62_0.20_245)] to-[oklch(0.68_0.16_195)] bg-clip-text text-transparent">
-                live.
-              </span>
+              {t("heroTitle")}
             </h1>
 
             <p className="mx-auto mt-5 max-w-xl text-base text-muted-foreground sm:text-lg lg:mx-0">
-              Know when it arrives, where it is, and whether there&rsquo;s a seat &mdash; from one
-              live radar.
+              {t("heroSubtitle")}
             </p>
 
-            <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row lg:justify-start">
-              <Link
-                to="/radar"
-                className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-semibold text-brand-foreground shadow-lg shadow-brand/30 transition-transform hover:scale-[1.03] sm:w-auto"
-              >
-                <Radar className="h-4 w-4" />
-                Open Live Radar
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </Link>
-              <button
-                type="button"
-                onClick={() => setDemoOpen(true)}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-border/70 bg-card/70 px-5 py-3 text-sm font-semibold text-foreground backdrop-blur-md transition-colors hover:bg-accent sm:w-auto"
-              >
-                <PlayCircle className="h-4 w-4" />
-                Watch 30&#8209;sec demo
-              </button>
+            <div className="mt-8 flex flex-col gap-4 items-center lg:items-start">
+              <div className="w-full text-left">
+                <RouteSearchPanel />
+              </div>
+              
+              <div className="flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+                <Link
+                  to="/search"
+                  className="group inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground transition-all hover:bg-accent"
+                >
+                  <Radar className="h-3.5 w-3.5" />
+                  {t("openRadar")}
+                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setDemoOpen(true)}
+                  className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground transition-all hover:bg-accent cursor-pointer"
+                >
+                  <PlayCircle className="h-3.5 w-3.5" />
+                  Watch 30&#8209;sec demo
+                </button>
+              </div>
             </div>
 
             {/* Trust indicators */}

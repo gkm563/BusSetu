@@ -10,13 +10,13 @@ async function compose(tripId: string): Promise<Occupancy | null> {
   const bus = await MockBusService.getBus(trip.busId);
   if (!bus) return null;
   const total = bus.totalSeats;
-  const onboard = trip.occupiedSeats + trip.standingPassengers;
+  const onboard = trip.passenger.occupiedSeats + trip.passenger.standingPassengers;
   return {
     tripId,
     totalSeats: total,
-    occupiedSeats: trip.occupiedSeats,
-    vacantSeats: trip.vacantSeats,
-    standingPassengers: trip.standingPassengers,
+    occupiedSeats: trip.passenger.occupiedSeats,
+    vacantSeats: trip.passenger.vacantSeats,
+    standingPassengers: trip.passenger.standingPassengers,
     occupancyPercentage: total === 0 ? 0 : Math.round((onboard / total) * 100),
   };
 }

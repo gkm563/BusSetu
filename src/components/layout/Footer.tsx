@@ -21,10 +21,10 @@ export function Footer() {
         <FooterCol
           title="Product"
           links={[
-            { label: "Live Radar", to: "/radar" },
+            { label: "Live Map", to: "/search" },
             { label: "Routes", to: "/routes" },
-            { label: "Nearby Buses", to: "/radar" },
-            { label: "Smart Filters", to: "/radar" },
+            { label: "Nearby Buses", to: "/search" },
+            { label: "Smart Filters", to: "/search" },
           ]}
         />
         <FooterCol

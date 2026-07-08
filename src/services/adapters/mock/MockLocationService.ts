@@ -6,31 +6,24 @@ import { MockTripAdapter } from "./MockTripAdapter";
 import { MockBusService } from "./MockBusService";
 import { MockOperatorService } from "./MockOperatorService";
 import { MockRouteService } from "./MockRouteService";
+import type { Trip } from "@/types/trip";
 import { haversineKm } from "@/utils/geo";
 
-function tripToGps(t: {
-  tripId: string;
-  latitude: number;
-  longitude: number;
-  speed: number;
-  heading: number;
-  gpsAccuracy: number;
-  lastUpdated: string;
-}): LiveGps {
+function tripToGps(t: Trip): LiveGps {
   return {
     tripId: t.tripId,
-    latitude: t.latitude,
-    longitude: t.longitude,
-    speed: t.speed,
-    heading: t.heading,
-    gpsAccuracy: t.gpsAccuracy,
-    timestamp: t.lastUpdated,
+    latitude: t.gps.latitude,
+    longitude: t.gps.longitude,
+    speed: t.gps.speed,
+    heading: t.gps.heading,
+    gpsAccuracy: t.gps.gpsAccuracy,
+    timestamp: t.gps.timestamp,
   };
 }
 
 export const MockLocationService: LocationService = {
   async getLiveGps(tripId) {
-    const t = await MockTripAdapter.getTrip(tripId);
+    const t = (await MockTripAdapter.getTrip(tripId)) as Trip | null;
     return t ? tripToGps(t) : null;
   },
   async getNearbyBuses(lat, lng, radiusKm) {
@@ -45,7 +38,7 @@ export const MockLocationService: LocationService = {
     const rMap = new Map(routes.map((r) => [r.id, r]));
     const out: LiveBusView[] = [];
     for (const trip of trips) {
-      const d = haversineKm({ lat, lng }, { lat: trip.latitude, lng: trip.longitude });
+      const d = haversineKm({ lat, lng }, { lat: trip.gps.latitude, lng: trip.gps.longitude });
       if (d > radiusKm) continue;
       const bus = bMap.get(trip.busId);
       const operator = oMap.get(trip.operatorId);
@@ -55,8 +48,8 @@ export const MockLocationService: LocationService = {
     }
     return out.sort(
       (a, b) =>
-        haversineKm({ lat, lng }, { lat: a.trip.latitude, lng: a.trip.longitude }) -
-        haversineKm({ lat, lng }, { lat: b.trip.latitude, lng: b.trip.longitude }),
+        haversineKm({ lat, lng }, { lat: a.trip.gps.latitude, lng: a.trip.gps.longitude }) -
+        haversineKm({ lat, lng }, { lat: b.trip.gps.latitude, lng: b.trip.gps.longitude }),
     );
   },
   subscribeToTripLocation(tripId, cb): Unsubscribe {

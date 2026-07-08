@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import type { Stop } from "@/types/stop";
 import { useLiveStore } from "@/store/useLiveStore";
 import { useUiStore } from "@/store/useUiStore";
-import { stopDivIcon } from "./busIcon";
+import { stopDivIcon, activeStopDivIcon } from "./busIcon";
 import { occupancyLabel, occupancyLevel } from "@/utils/occupancy";
 import { formatEta } from "@/utils/format";
 
@@ -12,7 +12,7 @@ import { formatEta } from "@/utils/format";
  * with ETA and live occupancy. Data is derived from active trips whose
  * route includes this stop and whose progress hasn't passed it.
  */
-export function StopMarker({ stop }: { stop: Stop }) {
+export function StopMarker({ stop, isActive }: { stop: Stop; isActive?: boolean }) {
   const tripsById = useLiveStore((s) => s.tripsById);
   const routesById = useLiveStore((s) => s.routesById);
   const busesById = useLiveStore((s) => s.busesById);
@@ -40,7 +40,7 @@ export function StopMarker({ stop }: { stop: Stop }) {
         busNumber: bus.busNumber,
         eta: trip.eta[stop.id],
         level: occupancyLevel(trip, bus),
-        vacant: trip.vacantSeats,
+        vacant: trip.passenger.vacantSeats,
       });
     }
     return rows
@@ -53,7 +53,10 @@ export function StopMarker({ stop }: { stop: Stop }) {
   }, [tripsById, routesById, busesById, stop.id]);
 
   return (
-    <Marker position={[stop.lat, stop.lng]} icon={stopDivIcon()}>
+    <Marker
+      position={[stop.lat, stop.lng]}
+      icon={isActive ? activeStopDivIcon(stop.name) : stopDivIcon()}
+    >
       <Popup>
         <div className="w-56 text-sm">
           <div className="font-semibold">{stop.name}</div>

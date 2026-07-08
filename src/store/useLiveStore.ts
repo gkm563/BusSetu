@@ -84,7 +84,23 @@ export const useLiveStore = create<LiveStoreState>((set, get) => ({
         for (const u of event.updates) {
           const t = current[u.tripId];
           if (!t) continue;
-          next[u.tripId] = { ...t, ...u.patch } as Trip;
+          next[u.tripId] = {
+            ...t,
+            routeProgress: u.patch.routeProgress,
+            currentStopId: u.patch.currentStopId,
+            nextStopId: u.patch.nextStopId,
+            eta: u.patch.eta,
+            lastUpdated: u.patch.lastUpdated,
+            gps: {
+              ...t.gps,
+              latitude: u.patch.latitude,
+              longitude: u.patch.longitude,
+              heading: u.patch.heading,
+              speed: u.patch.speed,
+              gpsAccuracy: u.patch.gpsAccuracy,
+              timestamp: u.patch.lastUpdated,
+            },
+          };
         }
         set({ tripsById: next });
         return;
@@ -95,15 +111,65 @@ export const useLiveStore = create<LiveStoreState>((set, get) => ({
         for (const u of event.updates) {
           const t = current[u.tripId];
           if (!t) continue;
-          next[u.tripId] = { ...t, ...u.patch } as Trip;
+          next[u.tripId] = {
+            ...t,
+            lastUpdated: u.patch.lastUpdated,
+            passenger: {
+              ...t.passenger,
+              occupiedSeats: u.patch.occupiedSeats,
+              standingPassengers: u.patch.standingPassengers,
+              vacantSeats: u.patch.vacantSeats,
+            },
+          };
         }
         set({ tripsById: next });
         return;
       }
-      if (event.type === "position" || event.type === "seats" || event.type === "status") {
+      if (event.type === "position") {
         const current = get().tripsById[event.tripId];
         if (!current) return;
-        const nextTrip: Trip = { ...current, ...event.patch } as Trip;
+        const nextTrip: Trip = {
+          ...current,
+          routeProgress: event.patch.routeProgress,
+          currentStopId: event.patch.currentStopId,
+          nextStopId: event.patch.nextStopId,
+          eta: event.patch.eta,
+          lastUpdated: event.patch.lastUpdated,
+          gps: {
+            ...current.gps,
+            latitude: event.patch.latitude,
+            longitude: event.patch.longitude,
+            heading: event.patch.heading,
+            speed: event.patch.speed,
+            gpsAccuracy: event.patch.gpsAccuracy,
+            timestamp: event.patch.lastUpdated,
+          },
+        };
+        set({ tripsById: { ...get().tripsById, [event.tripId]: nextTrip } });
+      }
+      if (event.type === "seats") {
+        const current = get().tripsById[event.tripId];
+        if (!current) return;
+        const nextTrip: Trip = {
+          ...current,
+          lastUpdated: event.patch.lastUpdated,
+          passenger: {
+            ...current.passenger,
+            occupiedSeats: event.patch.occupiedSeats,
+            standingPassengers: event.patch.standingPassengers,
+            vacantSeats: event.patch.vacantSeats,
+          },
+        };
+        set({ tripsById: { ...get().tripsById, [event.tripId]: nextTrip } });
+      }
+      if (event.type === "status") {
+        const current = get().tripsById[event.tripId];
+        if (!current) return;
+        const nextTrip: Trip = {
+          ...current,
+          status: event.patch.status,
+          lastUpdated: event.patch.lastUpdated,
+        };
         set({ tripsById: { ...get().tripsById, [event.tripId]: nextTrip } });
       }
     });

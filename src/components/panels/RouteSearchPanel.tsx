@@ -11,28 +11,76 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useRecentSearches } from "@/hooks/useRecentSearches";
+import { useRecentBuses } from "@/hooks/useRecentBuses";
 import { useUiStore } from "@/store/useUiStore";
-import { MOCK_STOPS } from "@/data/mock/stops";
+import { useLiveStore } from "@/store/useLiveStore";
+import { MOCK_STOPS } from "@/data/stops.mock";
 
 const POPULAR: { from: string; to: string }[] = [
-  { from: "Prayagraj", to: "Mirzapur" },
+  { from: "Prayagraj", to: "Lucknow" },
+  { from: "Lucknow", to: "Delhi" },
+  { from: "Delhi", to: "Prayagraj" },
   { from: "Prayagraj", to: "Varanasi" },
-  { from: "Lucknow", to: "Prayagraj" },
-  { from: "Mirzapur", to: "Varanasi" },
 ];
 
 export function RouteSearchPanel() {
   const setRouteQuery = useUiStore((s) => s.setRouteQuery);
   const clearRouteQuery = useUiStore((s) => s.clearRouteQuery);
   const active = useUiStore((s) => s.routeQuery.active);
-  const { request, status } = useGeolocation();
+  const storeFrom = useUiStore((s) => s.routeQuery.from);
+  const storeTo = useUiStore((s) => s.routeQuery.to);
+  const storeVia = useUiStore((s) => s.routeQuery.via);
+  const selectedTripId = useUiStore((s) => s.selectedTripId);
+  const selectTrip = useUiStore((s) => s.selectTrip);
+  const tripsById = useLiveStore((s) => s.tripsById);
+  const busesById = useLiveStore((s) => s.busesById);
+
+  const { request, status, location } = useGeolocation();
   const recents = useRecentSearches();
+  const recentBuses = useRecentBuses();
 
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [via, setVia] = useState("");
   const [departAt, setDepartAt] = useState("");
   const [showExtras, setShowExtras] = useState(false);
+
+  // Sync external store changes (e.g. navigation from /routes page) into
+  // local input state so the search box shows what was pre-filled.
+  useEffect(() => {
+    if (storeFrom) setFrom(storeFrom);
+    if (storeTo) setTo(storeTo);
+    if (storeVia) setVia(storeVia);
+  }, [storeFrom, storeTo, storeVia]);
+
+  // Pre-fill location: default to user's location if granted (only when box is empty)
+  useEffect(() => {
+    if (location && !from && !active) {
+      setFrom(status === "granted" ? "Current location" : "Prayagraj");
+    }
+  }, [location, status, active]);
+
+  // Record recently selected buses and sync selected trip in URL query
+  useEffect(() => {
+    if (!selectedTripId) {
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("trip");
+        window.history.replaceState(null, "", url.pathname + url.search);
+      }
+      return;
+    }
+    const trip = tripsById[selectedTripId];
+    const bus = trip ? busesById[trip.busId] : null;
+    if (trip && bus) {
+      recentBuses.push(trip.tripId, bus.busNumber);
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        url.searchParams.set("trip", selectedTripId);
+        window.history.replaceState(null, "", url.pathname + url.search);
+      }
+    }
+  }, [selectedTripId, tripsById, busesById]);
 
   function submit(next: { from: string; to: string; via?: string }) {
     if (!next.from && !next.to) return;
@@ -46,6 +94,23 @@ export function RouteSearchPanel() {
       departAt: departAt || undefined,
     });
     recents.push({ from: next.from, to: next.to, via: next.via });
+
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      if (url.pathname === "/") {
+        window.location.href = `/search?from=${encodeURIComponent(next.from)}&to=${encodeURIComponent(next.to)}${next.via ? `&via=${encodeURIComponent(next.via)}` : ""}`;
+        return;
+      }
+
+      if (next.from) url.searchParams.set("from", next.from);
+      else url.searchParams.delete("from");
+      if (next.to) url.searchParams.set("to", next.to);
+      else url.searchParams.delete("to");
+      if (next.via) url.searchParams.set("via", next.via);
+      else url.searchParams.delete("via");
+      window.history.replaceState(null, "", url.pathname + url.search);
+    }
+
     toast.success("Route found", {
       description: `${next.from || "Any"} → ${next.to || "Any"}`,
       duration: 2200,
@@ -68,6 +133,14 @@ export function RouteSearchPanel() {
     setVia("");
     setDepartAt("");
     clearRouteQuery();
+
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("from");
+      url.searchParams.delete("to");
+      url.searchParams.delete("via");
+      window.history.replaceState(null, "", url.pathname + url.search);
+    }
   }
 
   function useCurrent() {
@@ -204,6 +277,32 @@ export function RouteSearchPanel() {
                   key={`${r.from}-${r.to}-${r.ts}`}
                   label={`${r.from || "Any"} → ${r.to || "Any"}`}
                   onClick={() => submit({ from: r.from, to: r.to, via: r.via })}
+                />
+              ))}
+            </Section>
+          )}
+          {recentBuses.items.length > 0 && (
+            <Section
+              icon={<Clock className="h-3 w-3" aria-hidden />}
+              title="Recent buses"
+              action={
+                <button
+                  type="button"
+                  onClick={recentBuses.clear}
+                  className="text-[10px] font-semibold text-muted-foreground hover:text-foreground"
+                >
+                  Clear
+                </button>
+              }
+            >
+              {recentBuses.items.map((b) => (
+                <RouteChip
+                  key={b.tripId}
+                  label={`🚌 ${b.busNumber}`}
+                  onClick={() => {
+                    clearRouteQuery();
+                    selectTrip(b.tripId);
+                  }}
                 />
               ))}
             </Section>

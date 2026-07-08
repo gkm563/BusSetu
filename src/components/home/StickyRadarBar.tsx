@@ -41,10 +41,10 @@ export function StickyRadarBar() {
             </div>
           </div>
           <Link
-            to="/radar"
+            to="/search"
             className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-brand px-3.5 py-2 text-[12px] font-semibold text-brand-foreground shadow-md transition-transform hover:scale-[1.03]"
           >
-            Open Radar
+            Open Map
             <ArrowRight className="h-3.5 w-3.5" aria-hidden />
           </Link>
         </motion.div>

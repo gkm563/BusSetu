@@ -92,7 +92,7 @@ export const CatchService = {
       .sort(
         (a, b) =>
           a.assessment.busEtaSec - b.assessment.busEtaSec ||
-          b.view.trip.vacantSeats - a.view.trip.vacantSeats,
+          b.view.trip.passenger.vacantSeats - a.view.trip.passenger.vacantSeats,
       );
     return scored[0] ?? null;
   },

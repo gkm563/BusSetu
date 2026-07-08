@@ -28,7 +28,7 @@ export function SelectedTripFollower() {
     const size = map.getSize();
     // Offset the target so the bus renders ~25% below the map center,
     // leaving the upcoming route visible above the marker.
-    const point = map.latLngToContainerPoint([trip.latitude, trip.longitude]);
+    const point = map.latLngToContainerPoint([trip.gps.latitude, trip.gps.longitude]);
     point.y -= size.y * 0.22;
     const target = map.containerPointToLatLng(point);
 
@@ -40,7 +40,7 @@ export function SelectedTripFollower() {
     } else {
       map.panTo(target, { animate: true, duration: 0.6, easeLinearity: 0.4 });
     }
-  }, [map, selectedTripId, trip?.latitude, trip?.longitude]);
+  }, [map, selectedTripId, trip?.gps.latitude, trip?.gps.longitude]);
 
   return null;
 }

@@ -1,6 +1,15 @@
-import { motion } from "framer-motion";
-import { Check, Footprints, Sparkles, Timer, X } from "lucide-react";
-import { useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Check,
+  Sparkles,
+  X,
+  Ticket,
+  Armchair,
+  CheckCircle,
+  AlertTriangle,
+  QrCode,
+} from "lucide-react";
+import { useMemo, useState } from "react";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useSmartDiscovery } from "@/hooks/useSmartDiscovery";
 import { useUiStore } from "@/store/useUiStore";
@@ -13,12 +22,7 @@ function formatMin(sec: number) {
   return `${Math.round(sec / 60)} min`;
 }
 
-/**
- * Catch-This-Bus intelligence, rendered inside the Bus Details panel.
- * Shows whether the current selection is reachable in time and, if not,
- * suggests the next best catchable alternative from nearby buses.
- */
-export function CatchThisBusCard() {
+export function CatchThisBusCard({ onOpen }: { onOpen: () => void }) {
   const selectedTripId = useUiStore((s) => s.selectedTripId);
   const radiusKm = useUiStore((s) => s.discoveryRadiusKm);
   const view = useLiveBus(selectedTripId);
@@ -46,13 +50,15 @@ export function CatchThisBusCard() {
 
   if (!view || !location || !assessment) return null;
 
+  const catchStatus: "safe" | "tight" | "missed" =
+    assessment.slackSec < -90
+      ? "missed"
+      : assessment.slackSec < 60
+        ? "tight"
+        : "safe";
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25 }}
-      className="rounded-2xl border border-border/70 bg-gradient-to-br from-card to-card/60 p-3.5"
-    >
+    <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-card to-card/50 p-3.5 shadow-sm">
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           <Sparkles className="h-3.5 w-3.5 text-brand" />
@@ -60,25 +66,85 @@ export function CatchThisBusCard() {
         </div>
         {usingDemo && (
           <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Demo location
+            Demo Location
           </span>
         )}
       </div>
 
-      <VerdictRow
-        catchable={assessment.catchable}
-        stopName={assessment.targetStopName}
-        busEtaSec={assessment.busEtaSec}
-        walkingSec={assessment.walkingSec}
-        walkingKm={assessment.walkingKm}
-        slackSec={assessment.slackSec}
-      />
+      {/* Catch status banner */}
+      <div className="space-y-3">
+        <div
+          className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold ${
+            catchStatus === "safe"
+              ? "bg-success/15 text-success"
+              : catchStatus === "tight"
+                ? "bg-warning/15 text-warning"
+                : "bg-danger/15 text-danger"
+          }`}
+        >
+          {catchStatus === "safe" ? (
+            <Check className="h-4 w-4" />
+          ) : catchStatus === "tight" ? (
+            <AlertTriangle className="h-4 w-4" />
+          ) : (
+            <X className="h-4 w-4" />
+          )}
+          <span className="font-semibold">
+            {catchStatus === "safe" && "You can catch this bus!"}
+            {catchStatus === "tight" && "Close call! Walk quickly."}
+            {catchStatus === "missed" && "AI Advisor: You missed this bus!"}
+          </span>
+          <span className="ml-auto text-[10px] font-normal opacity-85 font-mono">
+            {catchStatus !== "missed" ? (
+              <>+{formatMin(Math.abs(assessment.slackSec))} spare</>
+            ) : (
+              <>Passed</>
+            )}
+          </span>
+        </div>
 
-      {!assessment.catchable && alternative && (
+        {/* Quick Metrics */}
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="rounded-xl border border-border/50 bg-background/50 p-2.5">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block mb-0.5">
+              Bus Arrival
+            </span>
+            <span className="font-bold text-foreground text-sm font-mono">
+              {formatMin(assessment.busEtaSec)}
+            </span>
+            <span className="text-[9px] text-muted-foreground block truncate">
+              at {assessment.targetStopName}
+            </span>
+          </div>
+          <div className="rounded-xl border border-border/50 bg-background/50 p-2.5">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block mb-0.5">
+              Walking Time
+            </span>
+            <span className="font-bold text-foreground text-sm font-mono">
+              {formatMin(assessment.walkingSec)}
+            </span>
+            <span className="text-[9px] text-muted-foreground block truncate">
+              {formatKm(assessment.walkingKm)} walk
+            </span>
+          </div>
+        </div>
+
+        {/* Primary Action Button */}
+        <button
+          onClick={onOpen}
+          className="w-full mt-1.5 flex items-center justify-center gap-2 rounded-xl bg-brand py-3 text-xs font-semibold text-brand-foreground shadow-md shadow-brand/20 transition-transform hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+        >
+          <Ticket className="h-4 w-4" />
+          Catch This Bus & Book Ticket
+        </button>
+      </div>
+
+      {/* Alternative suggestion if missed */}
+      {catchStatus === "missed" && alternative && (
         <div className="mt-3 rounded-xl border border-dashed border-border/70 bg-background/60 p-3">
           <div className="mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-brand">
             <Sparkles className="h-3 w-3" />
-            Try instead
+            AI Recommended Alternative
           </div>
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
@@ -91,97 +157,438 @@ export function CatchThisBusCard() {
             </div>
             <div className="text-right">
               <div className="text-[11px] font-semibold text-success">
-                {alternative.view.trip.vacantSeats} seats
+                 {alternative.view.trip.passenger.vacantSeats}{" "}
+                seats
               </div>
-              <div className="text-[10px] text-muted-foreground">
+              <div className="text-[10px] text-muted-foreground font-mono">
                 ETA {formatMin(alternative.assessment.busEtaSec)}
               </div>
             </div>
           </div>
-          <div className="mt-2 flex items-center gap-3 text-[10px] text-muted-foreground">
-            <span className="inline-flex items-center gap-1">
-              <Footprints className="h-3 w-3" />
-              {formatMin(alternative.assessment.walkingSec)} walk ·{" "}
-              {formatKm(alternative.assessment.walkingKm)}
-            </span>
-            <span className="inline-flex items-center gap-1 text-success">
-              <Check className="h-3 w-3" />
-              Catchable
-            </span>
-          </div>
         </div>
       )}
-    </motion.div>
-  );
-}
-
-function VerdictRow({
-  catchable,
-  stopName,
-  busEtaSec,
-  walkingSec,
-  walkingKm,
-  slackSec,
-}: {
-  catchable: boolean;
-  stopName: string;
-  busEtaSec: number;
-  walkingSec: number;
-  walkingKm: number;
-  slackSec: number;
-}) {
-  return (
-    <>
-      <div
-        className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold ${
-          catchable ? "bg-success/15 text-success" : "bg-danger/15 text-danger"
-        }`}
-      >
-        {catchable ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
-        <span>{catchable ? "You can catch this bus" : "You cannot catch this bus"}</span>
-        <span className="ml-auto text-[10px] font-normal opacity-80">
-          {Math.abs(slackSec) < 60
-            ? `${Math.abs(slackSec)}s ${catchable ? "spare" : "short"}`
-            : `${Math.round(Math.abs(slackSec) / 60)}m ${catchable ? "spare" : "short"}`}
-        </span>
-      </div>
-      <div className="mt-2 grid grid-cols-2 gap-2">
-        <MiniStat
-          icon={<Timer className="h-3 w-3" />}
-          label="Bus arrives"
-          value={formatMin(busEtaSec)}
-          sub={stopName}
-        />
-        <MiniStat
-          icon={<Footprints className="h-3 w-3" />}
-          label="Walking time"
-          value={formatMin(walkingSec)}
-          sub={formatKm(walkingKm)}
-        />
-      </div>
-    </>
-  );
-}
-
-function MiniStat({
-  icon,
-  label,
-  value,
-  sub,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  sub?: string;
-}) {
-  return (
-    <div className="rounded-xl border border-border/60 bg-background/60 px-2.5 py-2">
-      <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {icon}
-        <span className="truncate">{label}</span>
-      </div>
-      <div className="mt-0.5 font-display text-sm font-semibold">{value}</div>
-      {sub && <div className="truncate text-[10px] text-muted-foreground">{sub}</div>}
     </div>
+  );
+}
+
+export function CatchThisBusModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const selectedTripId = useUiStore((s) => s.selectedTripId);
+  const view = useLiveBus(selectedTripId);
+  const { location } = useGeolocation();
+
+  const [bookingStep, setBookingStep] = useState<"details" | "booking" | "ticket">("details");
+  const [selectedSeat, setSelectedSeat] = useState<string | null>(null);
+  const [passengerName, setPassengerName] = useState("");
+  const [passengerAge, setPassengerAge] = useState("");
+  const [ticketCode] = useState(() => "BST" + Math.floor(100000 + Math.random() * 900000));
+  const bookTicket = useUiStore((s) => s.bookTicket);
+
+  const assessment = useMemo(
+    () => (view && location ? CatchService.assess({ view, user: location }) : null),
+    [view, location],
+  );
+
+  // Seeding occupied seats deterministically based on trip occupancy
+  const occupiedSeats = useMemo(() => {
+    if (!view) return new Set<string>();
+    const count = view.trip.passenger.occupiedSeats;
+    const occupied = new Set<string>();
+    const cols = ["A", "B", "C", "D"];
+    let seeded = 0;
+    for (let r = 1; r <= 8; r++) {
+      for (const c of cols) {
+        if (seeded < count && (r + c.charCodeAt(0)) % 2 === 0) {
+          occupied.add(`${r}${c}`);
+          seeded++;
+        }
+      }
+    }
+    return occupied;
+  }, [view]);
+
+  if (!view || !location || !assessment) return null;
+
+  const catchStatus: "safe" | "tight" | "missed" =
+    assessment.slackSec < -90
+      ? "missed"
+      : assessment.slackSec < 60
+        ? "tight"
+        : "safe";
+
+  const handleClose = () => {
+    setBookingStep("details");
+    setSelectedSeat(null);
+    setPassengerName("");
+    setPassengerAge("");
+    onClose();
+  };
+
+  const handleConfirmPay = () => {
+    bookTicket({
+      ticketCode,
+      tripId: view.trip.tripId,
+      busNumber: view.bus.busNumber,
+      passengerName,
+      passengerAge: Number(passengerAge) || 25,
+      seatNumber: selectedSeat!,
+      boardingStop: assessment.targetStopName,
+      alightingStop: view.route.destination ?? "Destination",
+      fare: 120,
+      timestamp: new Date().toISOString(),
+    });
+    setBookingStep("ticket");
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="relative flex h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-3xl border border-border bg-background shadow-2xl"
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-border/60 p-4">
+              <div>
+                <h3 className="font-display text-base font-bold">Catch & Booking Intelligence</h3>
+                <p className="text-[11px] text-muted-foreground">
+                  Bus {view.bus.busNumber} · {view.route.name}
+                </p>
+              </div>
+              <button
+                onClick={handleClose}
+                className="grid h-8 w-8 place-items-center rounded-full bg-muted text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Steps Progress */}
+            <div className="grid grid-cols-3 border-b border-border/40 text-center text-[10px] font-semibold text-muted-foreground bg-muted/20">
+              <div
+                className={`py-2 border-b-2 ${
+                  bookingStep === "details" ? "border-brand text-brand font-bold" : "border-transparent"
+                }`}
+              >
+                1. Timing Check
+              </div>
+              <div
+                className={`py-2 border-b-2 ${
+                  bookingStep === "booking" ? "border-brand text-brand font-bold" : "border-transparent"
+                }`}
+              >
+                2. Seat & Info
+              </div>
+              <div
+                className={`py-2 border-b-2 ${
+                  bookingStep === "ticket" ? "border-brand text-brand font-bold" : "border-transparent"
+                }`}
+              >
+                3. Digital Pass
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {/* STEP 1: Details & Timing */}
+              {bookingStep === "details" && (
+                <div className="space-y-4">
+                  {/* Timing analysis card */}
+                  <div className="rounded-2xl border border-border/70 p-4 space-y-3 bg-gradient-to-br from-card/40 to-card/10">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-semibold text-muted-foreground">Route Progress</span>
+                      <span className="text-xs font-bold text-foreground">
+                        {Math.round(view.trip.routeProgress * 100)}% Completed
+                      </span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                      <div
+                        className="bg-brand h-full rounded-full"
+                        style={{ width: `${view.trip.routeProgress * 100}%` }}
+                      />
+                    </div>
+
+                    <div className="border-t border-border/50 pt-3 flex gap-2">
+                      <div className="flex-1 text-center">
+                        <span className="text-[10px] text-muted-foreground block">Current Speed</span>
+                        <span className="text-sm font-bold text-foreground">
+                          {Math.round(view.trip.gps.speed)} km/h
+                        </span>
+                      </div>
+                      <div className="w-px bg-border/50" />
+                      <div className="flex-1 text-center">
+                        <span className="text-[10px] text-muted-foreground block">GPS Status</span>
+                        <span className="text-sm font-bold text-success font-mono">Active Live</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* AI advisory section */}
+                  <div className="rounded-2xl border border-border bg-accent/30 p-3.5 text-xs space-y-2">
+                    <div className="flex items-center gap-1.5 font-bold text-brand">
+                      <Sparkles className="h-4 w-4" />
+                      AI Catch Advisory
+                    </div>
+                    <p className="text-muted-foreground leading-relaxed">
+                      {catchStatus === "safe" &&
+                        `This bus is traveling towards your nearest stop (${assessment.targetStopName}) at ${Math.round(view.trip.gps.speed)} km/h. You have plenty of time (${formatMin(assessment.slackSec)} spare) to reach the stop. Secure your seat now!`}
+                      {catchStatus === "tight" &&
+                        `Hurry! The bus will arrive in ${formatMin(assessment.busEtaSec)} and it will take you ${formatMin(assessment.walkingSec)} to walk there. You only have a narrow window of ${formatMin(assessment.slackSec)} spare. Walk briskly.`}
+                      {catchStatus === "missed" &&
+                        `Oops, you missed this bus! It has already passed the stop nearest to you. We strongly recommend booking one of the alternative buses showing under the Smart Discovery section.`}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => setBookingStep("booking")}
+                    disabled={catchStatus === "missed"}
+                    className="w-full mt-4 flex items-center justify-center gap-2 rounded-xl bg-brand py-3 text-xs font-semibold text-brand-foreground shadow-md disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    Choose Seat & Passenger Info →
+                  </button>
+                </div>
+              )}
+
+              {/* STEP 2: Seat Map Selection & Passenger Info */}
+              {bookingStep === "booking" && (
+                <div className="space-y-4">
+                  {/* Passenger form */}
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Passenger Details
+                    </label>
+                    <div className="grid grid-cols-[1fr_80px] gap-2">
+                      <input
+                        type="text"
+                        placeholder="Passenger Name"
+                        value={passengerName}
+                        onChange={(e) => setPassengerName(e.target.value)}
+                        className="w-full rounded-xl border border-border bg-card px-3 py-2 text-xs outline-none focus:border-brand"
+                      />
+                      <input
+                        type="number"
+                        placeholder="Age"
+                        value={passengerAge}
+                        onChange={(e) => setPassengerAge(e.target.value)}
+                        className="w-full rounded-xl border border-border bg-card px-3 py-2 text-xs outline-none focus:border-brand"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Seat Selector Grid */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Select Seat
+                      </label>
+                      {selectedSeat && (
+                        <span className="text-[11px] font-bold text-brand bg-brand/10 px-2 py-0.5 rounded-full font-mono">
+                          Seat {selectedSeat}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Interactive Seat Map Grid */}
+                    <div className="rounded-2xl border border-border bg-muted/30 p-4">
+                      <div className="mb-3 text-[10px] font-semibold text-center text-muted-foreground border-b border-border/50 pb-2">
+                        🚌 FRONT / DRIVER SIDE
+                      </div>
+
+                      {/* Columns mapping A B - C D */}
+                      <div className="grid grid-cols-[30px_1.2fr_1.2fr_12px_1.2fr_1.2fr] gap-y-2 text-center items-center justify-items-center">
+                        {/* Header row labels */}
+                        <div />
+                        <div className="text-[10px] font-bold text-muted-foreground">A</div>
+                        <div className="text-[10px] font-bold text-muted-foreground">B</div>
+                        <div />
+                        <div className="text-[10px] font-bold text-muted-foreground">C</div>
+                        <div className="text-[10px] font-bold text-muted-foreground">D</div>
+
+                        {Array.from({ length: 8 }).map((_, rIdx) => {
+                          const row = rIdx + 1;
+                          const seatA = `${row}A`;
+                          const seatB = `${row}B`;
+                          const seatC = `${row}C`;
+                          const seatD = `${row}D`;
+
+                          return (
+                            <div key={row} className="contents">
+                              <div className="text-[9px] font-bold text-muted-foreground">{row}</div>
+                              <SeatButton
+                                id={seatA}
+                                occupied={occupiedSeats.has(seatA)}
+                                selected={selectedSeat === seatA}
+                                onClick={() => setSelectedSeat(seatA)}
+                              />
+                              <SeatButton
+                                id={seatB}
+                                occupied={occupiedSeats.has(seatB)}
+                                selected={selectedSeat === seatB}
+                                onClick={() => setSelectedSeat(seatB)}
+                              />
+                              <div className="w-2" /> {/* Aisle space */}
+                              <SeatButton
+                                id={seatC}
+                                occupied={occupiedSeats.has(seatC)}
+                                selected={selectedSeat === seatC}
+                                onClick={() => setSelectedSeat(seatC)}
+                              />
+                              <SeatButton
+                                id={seatD}
+                                occupied={occupiedSeats.has(seatD)}
+                                selected={selectedSeat === seatD}
+                                onClick={() => setSelectedSeat(seatD)}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div className="mt-4 flex justify-center gap-4 text-[10px] text-muted-foreground border-t border-border/50 pt-3">
+                        <span className="flex items-center gap-1">
+                          <span className="h-3 w-3 rounded bg-card border border-border" /> Available
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="h-3 w-3 rounded bg-muted-foreground/30 border border-transparent" /> Occupied
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="h-3 w-3 rounded bg-brand border border-brand" /> Selected
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleConfirmPay}
+                    disabled={!passengerName || !selectedSeat}
+                    className="w-full mt-4 flex items-center justify-center gap-2 rounded-xl bg-brand py-3 text-xs font-semibold text-brand-foreground shadow-md disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    Confirm Booking & Pay (₹120)
+                  </button>
+                </div>
+              )}
+
+              {/* STEP 3: Boarding Pass Ticket */}
+              {bookingStep === "ticket" && (
+                <div className="space-y-4 py-2">
+                  <div className="text-center space-y-1">
+                    <div className="inline-grid h-12 w-12 place-items-center rounded-full bg-success/20 text-success">
+                      <CheckCircle className="h-6 w-6" />
+                    </div>
+                    <h4 className="font-display text-base font-bold text-foreground">Ticket Confirmed!</h4>
+                    <p className="text-xs text-muted-foreground">Show this QR code to the driver upon boarding.</p>
+                  </div>
+
+                  {/* Digital Boarding Pass */}
+                  <div className="relative rounded-3xl border border-border bg-card shadow-lg overflow-hidden">
+                    {/* Ticket header */}
+                    <div className="bg-brand p-4 text-brand-foreground flex justify-between items-center">
+                      <div className="flex items-center gap-1.5">
+                        <Sparkles className="h-4 w-4" />
+                        <span className="font-display font-bold text-sm tracking-wide uppercase">Boarding Pass</span>
+                      </div>
+                      <span className="font-mono text-xs font-semibold">{ticketCode}</span>
+                    </div>
+
+                    {/* Ticket body */}
+                    <div className="p-4 space-y-4 text-xs">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="text-[10px] text-muted-foreground block uppercase">Passenger</span>
+                          <span className="font-semibold text-sm text-foreground truncate block">
+                            {passengerName || "User"}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-muted-foreground block uppercase">Seat Number</span>
+                          <span className="font-mono font-bold text-sm text-brand block">
+                            {selectedSeat}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="border-t border-dashed border-border pt-3 grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="text-[10px] text-muted-foreground block uppercase">Nearest Stop</span>
+                          <span className="font-semibold text-foreground truncate block">
+                            {assessment.targetStopName}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-muted-foreground block uppercase">Boarding ETA</span>
+                          <span className="font-mono font-semibold text-foreground block">
+                            {formatMin(assessment.busEtaSec)}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="border-t border-dashed border-border pt-3 grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="text-[10px] text-muted-foreground block uppercase">Fare Price</span>
+                          <span className="font-bold text-success text-sm block">₹120.00</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-muted-foreground block uppercase">Status</span>
+                          <span className="font-semibold text-success block">● CONFIRMED</span>
+                        </div>
+                      </div>
+
+                      {/* Barcode/QR Section */}
+                      <div className="border-t border-dashed border-border pt-4 flex flex-col items-center justify-center gap-2">
+                        <QrCode className="h-20 w-20 text-foreground" />
+                        <span className="font-mono text-[9px] text-muted-foreground tracking-widest uppercase">
+                          scan on bus entry
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleClose}
+                    className="w-full mt-4 flex items-center justify-center gap-2 rounded-xl bg-brand py-3 text-xs font-semibold text-brand-foreground shadow-md cursor-pointer"
+                  >
+                    Done & Back to Map
+                  </button>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function SeatButton({
+  id,
+  occupied,
+  selected,
+  onClick,
+}: {
+  id: string;
+  occupied: boolean;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      title={`Seat ${id}`}
+      aria-label={`Seat ${id}`}
+      disabled={occupied}
+      onClick={onClick}
+      className={`grid h-8 w-8 place-items-center rounded-lg border text-[10px] font-bold transition-all ${
+        occupied
+          ? "bg-muted-foreground/15 border-transparent text-muted-foreground/40 cursor-not-allowed"
+          : selected
+            ? "bg-brand border-brand text-brand-foreground shadow-sm shadow-brand/20 scale-105"
+            : "bg-card border-border hover:border-brand/50 hover:bg-brand/5 text-foreground cursor-pointer"
+      }`}
+    >
+      <Armchair className="h-4 w-4" />
+    </button>
   );
 }

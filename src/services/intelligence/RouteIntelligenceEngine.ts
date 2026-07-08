@@ -90,11 +90,15 @@ export function findDirectRoutes(
   routes: BusRoute[],
 ): DirectRouteMatch[] {
   const out: DirectRouteMatch[] = [];
+  const hasFrom = !!fromQuery.trim();
+  const hasTo = !!toQuery.trim();
   for (const route of routes) {
-    const fromIdx = route.stops.findIndex((s) => stopMatches(s, fromQuery));
-    if (fromIdx < 0) continue;
-    const toIdx = route.stops.findIndex((s, i) => i > fromIdx && stopMatches(s, toQuery));
-    if (toIdx < 0) continue;
+    const fromIdx = hasFrom ? route.stops.findIndex((s) => stopMatches(s, fromQuery)) : 0;
+    if (hasFrom && fromIdx < 0) continue;
+    const toIdx = hasTo
+      ? route.stops.findIndex((s, i) => i > fromIdx && stopMatches(s, toQuery))
+      : route.stops.length - 1;
+    if (hasTo && toIdx < 0) continue;
     out.push({
       route,
       boardingStop: route.stops[fromIdx],
@@ -297,8 +301,8 @@ export function rankTripsForRoute(
 
     const distanceFromUserKm = userLocation
       ? haversineKm(userLocation, {
-          lat: trip.latitude,
-          lng: trip.longitude,
+          lat: trip.gps.latitude,
+          lng: trip.gps.longitude,
         })
       : 0;
 
@@ -308,7 +312,7 @@ export function rankTripsForRoute(
       : null;
 
     const status = computeSmartStatus(trip, boardingStop.id, boardingProgress);
-    const seatsAvailable = trip.vacantSeats;
+    const seatsAvailable = trip.passenger.vacantSeats;
     const occupancyPct = Math.round(occupancyRatio(trip, b) * 100);
     const delayMin = trip.delay ?? 0;
     const catchable = etaToBoardingSec != null && walkingMin * 60 <= etaToBoardingSec + 60;
@@ -348,7 +352,7 @@ function computeSmartStatus(
   if (trip.status === "completed") return "completed";
   if ((trip.delay ?? 0) > 5) return "delayed";
   if (trip.nextStopId === boardingStopId) return "approaching_pickup";
-  if (trip.currentStopId === boardingStopId || trip.speed < 2) return "stopped";
+  if (trip.currentStopId === boardingStopId || trip.gps.speed < 2) return "stopped";
   if (trip.routeProgress > boardingProgress + 0.02) return "already_crossed";
   if (trip.routeProgress < boardingProgress) return "coming_towards";
   return "moving_away";
@@ -422,7 +426,7 @@ export function summarizeRoute(
 
   const activeTrips = recommendations.length;
   const avgSpeedKmh = activeTrips
-    ? Math.round(recommendations.reduce((a, r) => a + r.trip.speed, 0) / activeTrips)
+    ? Math.round(recommendations.reduce((a, r) => a + r.trip.gps.speed, 0) / activeTrips)
     : 38;
   const expectedDelayMin = activeTrips
     ? Math.round(recommendations.reduce((a, r) => a + Math.max(0, r.delayMin), 0) / activeTrips)

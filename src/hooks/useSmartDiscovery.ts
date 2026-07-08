@@ -29,18 +29,17 @@ export interface DiscoveryResult extends LiveBusView {
 
 function computeRelation(
   view: LiveBusView,
-  user: UserLocation,
   bearingFromUser: number,
   distanceKm: number,
 ): BusRelation {
   const { trip } = view;
   if (trip.status === "completed") return "completed";
   if (trip.status === "boarding") return "at_stop";
-  if (trip.speed < 2) {
+  if (trip.gps.speed < 2) {
     // Very slow: likely near a stop.
     return "approaching_stop";
   }
-  const angleDiff = Math.abs(((trip.heading - bearingFromUser + 540) % 360) - 180);
+  const angleDiff = Math.abs(((trip.gps.heading - bearingFromUser + 540) % 360) - 180);
   // Heading opposite to bearing-from-user means bus is moving towards user.
   if (angleDiff > 120) return "coming_towards";
   if (angleDiff < 60) {
@@ -75,8 +74,8 @@ export function useSmartDiscovery(
 
     for (const trip of Object.values(tripsById)) {
       const distanceKm = haversineKm(location, {
-        lat: trip.latitude,
-        lng: trip.longitude,
+        lat: trip.gps.latitude,
+        lng: trip.gps.longitude,
       });
       if (distanceKm > radiusKm) continue;
       const bus = busesById[trip.busId];
@@ -85,12 +84,11 @@ export function useSmartDiscovery(
       if (!bus || !operator || !route) continue;
 
       const bFromUser = bearingDeg(location, {
-        lat: trip.latitude,
-        lng: trip.longitude,
+        lat: trip.gps.latitude,
+        lng: trip.gps.longitude,
       });
       const relation = computeRelation(
         { trip, bus, operator, route },
-        location,
         bFromUser,
         distanceKm,
       );
@@ -128,7 +126,7 @@ export function useSmartDiscovery(
         walkingToNearestStopKm: nearestKm,
         nearestStop,
         nextStopEtaSec,
-        seatAvailability: trip.vacantSeats,
+        seatAvailability: trip.passenger.vacantSeats,
         occupancyPct: Math.round(occupancyRatio(trip, bus) * 100),
         badges: [],
         score: 0,

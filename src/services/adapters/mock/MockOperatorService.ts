@@ -1,5 +1,5 @@
 import type { OperatorService } from "@/services/contracts/OperatorService";
-import { MOCK_OPERATORS } from "@/data/mock/operators";
+import { MOCK_OPERATORS } from "@/data/operators.mock";
 import { withLatency } from "./latency";
 
 export const MockOperatorService: OperatorService = {

@@ -1,7 +1,7 @@
 import type { GlobalSearchResult, SearchService } from "@/services/contracts/SearchService";
-import { MOCK_BUSES } from "@/data/mock/buses";
-import { MOCK_ROUTES } from "@/data/mock/routes";
-import { MOCK_STOPS } from "@/data/mock/stops";
+import { MOCK_BUSES } from "@/data/buses.mock";
+import { MOCK_ROUTES } from "@/data/routes.mock";
+import { MOCK_STOPS } from "@/data/stops.mock";
 import { withLatency } from "./latency";
 
 export const MockSearchService: SearchService = {
@@ -10,7 +10,11 @@ export const MockSearchService: SearchService = {
     if (!q) {
       return { buses: [], routes: [], stops: [], cities: [] };
     }
-    const buses = MOCK_BUSES.filter((b) => b.busNumber.toLowerCase().includes(q)).slice(0, 6);
+    const cleanQ = q.replace(/\s+/g, "");
+    const buses = MOCK_BUSES.filter((b) => {
+      const cleanNum = b.busNumber.toLowerCase().replace(/\s+/g, "");
+      return cleanNum.includes(cleanQ);
+    }).slice(0, 6);
     const routes = MOCK_ROUTES.filter(
       (r) =>
         r.name.toLowerCase().includes(q) ||

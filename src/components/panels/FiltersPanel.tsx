@@ -1,17 +1,27 @@
-import { SlidersHorizontal } from "lucide-react";
+import {
+  SlidersHorizontal,
+  Landmark,
+  Building2,
+  Snowflake,
+  Zap,
+  Crown,
+  Users,
+  Heart,
+  MapPin,
+} from "lucide-react";
 import { useUiStore } from "@/store/useUiStore";
 
 const OPERATOR_KINDS = [
-  { key: "government", label: "Government" },
-  { key: "private", label: "Private" },
+  { key: "government", label: "Government", icon: Landmark },
+  { key: "private", label: "Private", icon: Building2 },
 ] as const;
 
 const AMENITIES = [
-  { key: "ac", label: "AC" },
-  { key: "electric", label: "Electric" },
-  { key: "luxury", label: "Luxury" },
-  { key: "mini", label: "Mini" },
-  { key: "women_friendly", label: "Women friendly" },
+  { key: "ac", label: "AC", icon: Snowflake },
+  { key: "electric", label: "Electric", icon: Zap },
+  { key: "luxury", label: "Luxury", icon: Crown },
+  { key: "mini", label: "Mini", icon: Users },
+  { key: "women_friendly", label: "Women friendly", icon: Heart },
 ] as const;
 
 export function FiltersPanel() {
@@ -56,6 +66,7 @@ export function FiltersPanel() {
           active={filters.operatorKinds.has(o.key)}
           onClick={() => toggleOperatorKind(o.key)}
           label={o.label}
+          icon={o.icon}
         />
       ))}
       <span className="mx-1 h-5 w-px shrink-0 bg-border" />
@@ -65,16 +76,17 @@ export function FiltersPanel() {
           active={filters.amenities.has(a.key)}
           onClick={() => toggleAmenity(a.key)}
           label={a.label}
+          icon={a.icon}
         />
       ))}
       <span className="mx-1 h-5 w-px shrink-0 bg-border" />
-      <Chip active={filters.seatsAvailable} onClick={toggleSeats} label="Seats available" />
-      <Chip active={filters.lowCrowd} onClick={toggleLowCrowd} label="Low crowd" />
-      <Chip active={filters.nearbyOnly} onClick={toggleNearby} label="Nearby" />
+      <Chip active={filters.seatsAvailable} onClick={toggleSeats} label="Seats available" icon={Users} />
+      <Chip active={filters.lowCrowd} onClick={toggleLowCrowd} label="Low crowd" icon={Users} />
+      <Chip active={filters.nearbyOnly} onClick={toggleNearby} label="Nearby" icon={MapPin} />
       {anyActive && (
         <button
           onClick={clearFilters}
-          className="ml-1 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
+          className="ml-1 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer"
         >
           Clear
         </button>
@@ -83,17 +95,28 @@ export function FiltersPanel() {
   );
 }
 
-function Chip({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
+function Chip({
+  active,
+  onClick,
+  label,
+  icon: Icon,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+  icon?: React.ComponentType<{ className?: string }>;
+}) {
   return (
     <button
       onClick={onClick}
-      className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+      className={`inline-flex items-center gap-1.5 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
         active
-          ? "bg-brand text-brand-foreground"
+          ? "bg-brand text-brand-foreground shadow-sm"
           : "text-muted-foreground hover:bg-accent hover:text-foreground"
       }`}
     >
-      {label}
+      {Icon && <Icon className="h-3.5 w-3.5" />}
+      <span>{label}</span>
     </button>
   );
 }

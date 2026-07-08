@@ -1,6 +1,20 @@
 import { create } from "zustand";
+import { useLiveStore } from "./useLiveStore";
 
 const DARK_KEY = "bussetu.darkMode";
+
+export interface BookedTicket {
+  ticketCode: string;
+  tripId: string;
+  busNumber: string;
+  passengerName: string;
+  passengerAge: number;
+  seatNumber: string;
+  boardingStop: string;
+  alightingStop: string;
+  fare: number;
+  timestamp: string;
+}
 
 function readInitialDarkMode(): boolean {
   if (typeof window === "undefined") return false;
@@ -11,7 +25,7 @@ function readInitialDarkMode(): boolean {
   } catch {
     /* ignore */
   }
-  return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
+  return false; // Default theme is light
 }
 
 function applyDark(v: boolean) {
@@ -53,6 +67,9 @@ interface UiStoreState {
   discoveryRadiusKm: number;
   timelineOpen: boolean;
   darkMode: boolean;
+  language: "en" | "hi" | "th";
+  replayOffset: number; // 0 for Live, 5 for -5m, 10 for -10m
+  bookedTickets: BookedTicket[];
 
   selectTrip: (id: string | null) => void;
   hoverTrip: (id: string | null) => void;
@@ -70,6 +87,9 @@ interface UiStoreState {
   closeTimeline: () => void;
   toggleDarkMode: () => void;
   setDarkMode: (v: boolean) => void;
+  setLanguage: (lang: "en" | "hi" | "th") => void;
+  bookTicket: (ticket: BookedTicket) => void;
+  setReplayOffset: (v: number) => void;
 }
 
 function emptyFilters(): RadarFilters {
@@ -91,6 +111,9 @@ export const useUiStore = create<UiStoreState>((set, get) => ({
   discoveryRadiusKm: 5,
   timelineOpen: false,
   darkMode: readInitialDarkMode(),
+  language: "en",
+  replayOffset: 0,
+  bookedTickets: [],
 
   selectTrip: (id) => set({ selectedTripId: id }),
   hoverTrip: (id) => set({ hoveredTripId: id }),
@@ -146,4 +169,15 @@ export const useUiStore = create<UiStoreState>((set, get) => ({
     set({ darkMode: v });
     applyDark(v);
   },
+  setLanguage: (lang) => set({ language: lang }),
+  bookTicket: (ticket) => {
+    set((state) => ({ bookedTickets: [...state.bookedTickets, ticket] }));
+    const live = useLiveStore.getState();
+    const trip = live.tripsById[ticket.tripId];
+    if (trip) {
+      trip.passenger.occupiedSeats += 1;
+      trip.passenger.vacantSeats = Math.max(0, trip.passenger.vacantSeats - 1);
+    }
+  },
+  setReplayOffset: (v) => set({ replayOffset: v }),
 }));

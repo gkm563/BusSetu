@@ -129,10 +129,10 @@ export function RouteResultsPanel() {
               <RouteIcon className="h-3 w-3" aria-hidden />
               Smart route intelligence
             </div>
-            <div className="mt-1 flex min-w-0 items-center gap-1.5 font-display text-[13px] font-semibold">
-              <span className="truncate">{routeQuery.from || "Any"}</span>
-              <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
-              <span className="truncate">{routeQuery.to || "Any"}</span>
+            <div className="mt-2 flex flex-wrap items-center gap-2 font-display text-sm font-black tracking-tight text-foreground uppercase">
+              <span className="rounded-lg bg-brand/10 text-brand px-2 py-0.5 border border-brand/20">{routeQuery.from || "Any"}</span>
+              <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+              <span className="rounded-lg bg-brand/10 text-brand px-2 py-0.5 border border-brand/20">{routeQuery.to || "Any"}</span>
             </div>
             {routeQuery.departAt && (
               <div className="mt-0.5 flex items-center gap-1 text-[10px] text-muted-foreground">
@@ -343,46 +343,51 @@ function RecommendationCard({
       <button
         onClick={onSelect}
         aria-pressed={selected}
-        className={`group w-full rounded-2xl border p-3 text-left transition-all ${
+        className={`group w-full rounded-2xl border p-3.5 text-left transition-all flex flex-col gap-3 ${
           selected
-            ? "border-brand bg-brand/5 shadow-md"
+            ? "border-brand bg-brand/10 shadow-md ring-2 ring-brand/10"
             : muted
-              ? "border-border/40 bg-card/40 opacity-70 hover:opacity-100"
-              : "border-border/60 bg-card/70 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-md"
+              ? "border-border/40 bg-card/40 opacity-60 hover:opacity-100"
+              : "border-border/60 bg-card/80 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-md"
         }`}
       >
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="font-display text-sm font-semibold">{rec.bus.busNumber}</span>
+        {/* Header segment */}
+        <div className="flex items-center justify-between gap-3 w-full">
+          <div className="min-w-0 flex-1 space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="bg-brand/10 text-brand px-2 py-0.5 rounded-lg border border-brand/20 text-xs font-mono font-extrabold uppercase tracking-wider">
+                📋 {rec.bus.busNumber}
+              </span>
               <span
-                className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider ${status.cls}`}
+                className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${status.cls}`}
               >
-                <StatusIcon className="h-2.5 w-2.5" aria-hidden />
+                <StatusIcon className="h-3 w-3" aria-hidden />
                 {status.label}
               </span>
             </div>
-            <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
-              {rec.operator.name} · {rec.route.name}
+            <div className="truncate text-xs font-semibold text-muted-foreground/80">
+              {rec.operator.name} · <span className="text-foreground">{rec.route.name}</span>
             </div>
           </div>
-          <div className="shrink-0 text-right">
-            <div className="font-display text-lg font-bold leading-none">
+          
+          <div className="shrink-0 rounded-xl bg-brand/5 border border-brand/10 p-2 text-center min-w-[75px]">
+            <div className="font-mono text-sm font-black text-brand leading-none">
               {formatSec(rec.etaToBoardingSec)}
             </div>
-            <div className="text-[10px] text-muted-foreground">to pickup</div>
+            <div className="text-[8px] text-muted-foreground uppercase font-bold tracking-wider mt-1">pickup</div>
           </div>
         </div>
 
+        {/* Badges segment */}
         {rec.badges.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1 border-t border-border/40 pt-2.5">
             {rec.badges.map((b) => {
               const meta = BADGE_META[b];
               const Icon = meta.Icon;
               return (
                 <span
                   key={b}
-                  className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${meta.cls}`}
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold ${meta.cls}`}
                 >
                   <Icon className="h-3 w-3" aria-hidden />
                   {meta.label}
@@ -392,10 +397,11 @@ function RecommendationCard({
           </div>
         )}
 
-        <div className="mt-2.5 grid grid-cols-4 gap-1.5 text-[10px]">
+        {/* Metrics segment */}
+        <div className="grid grid-cols-4 gap-2 text-[10px] bg-muted/40 rounded-xl p-2.5 border border-border/40">
           <Metric
             Icon={Footprints}
-            label={`${formatKm(rec.walkingKm)} · ${rec.walkingMin}m`}
+            label={`${formatKm(rec.walkingKm)} (${rec.walkingMin}m)`}
             tone={rec.walkingKm > 1.5 ? "warn" : "default"}
           />
           <Metric
@@ -403,36 +409,38 @@ function RecommendationCard({
             label={`${rec.seatsAvailable} seats`}
             tone={rec.seatsAvailable === 0 ? "warn" : "default"}
           />
-          <Metric Icon={Users} label={`${rec.occupancyPct}%`} />
-          <Metric Icon={Gauge} label={`${Math.round(rec.trip.speed)} km/h`} />
+          <Metric Icon={Users} label={`${rec.occupancyPct}% crowd`} />
+          <Metric Icon={Gauge} label={`${Math.round(rec.trip.gps.speed)} km/h`} />
         </div>
 
-        <div className="mt-2.5 space-y-1">
-          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-            <MapPin className="h-2.5 w-2.5 text-brand" aria-hidden />
-            <span className="truncate">
-              Board at <b className="text-foreground">{rec.boardingStop.name}</b>
-            </span>
-            <span className="mx-0.5 text-muted-foreground/50">·</span>
-            <span className="truncate">
-              off at <b className="text-foreground">{rec.alightingStop.name}</b>
-            </span>
+        {/* Progress & stops segment */}
+        <div className="space-y-2 w-full pt-1">
+          <div className="flex items-center gap-2 text-[10px] text-muted-foreground/90">
+            <MapPin className="h-3.5 w-3.5 text-brand shrink-0" aria-hidden />
+            <div className="min-w-0 flex-1 truncate">
+              <span className="font-bold text-foreground">{rec.boardingStop.name}</span>
+              <span className="mx-1 text-muted-foreground/45">→</span>
+              <span className="font-bold text-foreground">{rec.alightingStop.name}</span>
+            </div>
           </div>
-          <div className="relative h-1.5 overflow-hidden rounded-full bg-muted">
-            <div
-              className="absolute inset-y-0 left-0 rounded-full bg-brand transition-all"
-              style={{ width: `${progress}%` }}
-              aria-label={`Trip progress ${progress}%`}
-            />
-          </div>
-          <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-            <span>{formatKm(rec.distanceFromUserKm)} away</span>
-            <span>{progress}% of route</span>
+          
+          <div className="space-y-1">
+            <div className="relative h-2 overflow-hidden rounded-full bg-muted border border-border/30">
+              <div
+                className="absolute inset-y-0 left-0 rounded-full bg-brand transition-all duration-500"
+                style={{ width: `${progress}%` }}
+                aria-label={`Trip progress ${progress}%`}
+              />
+            </div>
+            <div className="flex items-center justify-between text-[9px] font-bold text-muted-foreground uppercase tracking-wide">
+              <span>{formatKm(rec.distanceFromUserKm)} away</span>
+              <span className="text-brand">{progress}% traveled</span>
+            </div>
           </div>
         </div>
 
         {rec.catchable && !muted && (
-          <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-success/15 border border-success/20 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-success">
             <CircleCheck className="h-3 w-3" aria-hidden /> You can catch this bus
           </div>
         )}

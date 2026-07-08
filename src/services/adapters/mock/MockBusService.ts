@@ -1,5 +1,5 @@
 import type { BusService } from "@/services/contracts/BusService";
-import { MOCK_BUSES } from "@/data/mock/buses";
+import { MOCK_BUSES } from "@/data/buses.mock";
 import { withLatency } from "./latency";
 
 export const MockBusService: BusService = {

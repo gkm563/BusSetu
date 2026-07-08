@@ -2,7 +2,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Accessibility,
   Activity,
-  ArrowRight,
   BatteryCharging,
   Bus as BusIcon,
   Camera,
@@ -28,8 +27,6 @@ import {
   Sparkles,
   Ticket,
   Timer,
-  TrendingDown,
-  TrendingUp,
   Users,
   Wifi,
   X,
@@ -42,9 +39,9 @@ import { useLiveBus } from "@/hooks/useLiveBus";
 import { useLiveStore } from "@/store/useLiveStore";
 import type { LiveBusView } from "@/types/view";
 import type { BusAmenity } from "@/types/bus";
-import { occupancyLabel, occupancyLevel, occupancyRatio } from "@/utils/occupancy";
+import { occupancyLabel, occupancyRatio } from "@/utils/occupancy";
 import { formatEta, formatKm, formatRelative } from "@/utils/format";
-import { CatchThisBusCard } from "./CatchThisBusCard";
+import { CatchThisBusCard, CatchThisBusModal } from "./CatchThisBusCard";
 
 const FAV_KEY = "bussetu.favoriteTrips";
 
@@ -142,20 +139,20 @@ function PanelBody({
   fav: { isFav: boolean; toggle: () => void };
 }) {
   const { trip, bus, route } = view;
-  const speedHistory = useSampleHistory(trip.speed, trip.lastUpdated, 30);
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const speedHistory = useSampleHistory(trip.gps.speed, trip.lastUpdated, 30);
   const occHistory = useSampleHistory(
     Math.round(occupancyRatio(trip, bus) * 100),
     trip.lastUpdated,
     30,
   );
   const distanceCoveredKm = route.distanceKm * trip.routeProgress;
-  const distanceRemainingKm = Math.max(0, route.distanceKm - distanceCoveredKm);
   const avgSpeed = useMemo(
     () =>
       speedHistory.length
         ? Math.round(speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length)
-        : Math.round(trip.speed),
-    [speedHistory, trip.speed],
+        : Math.round(trip.gps.speed),
+    [speedHistory, trip.gps.speed],
   );
 
   return (
@@ -163,34 +160,39 @@ function PanelBody({
       <StickyHeader view={view} onClose={onClose} fav={fav} />
 
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
-        <LiveStatusStrip
+        {/* 1. ETA and Delay Status (More visible Delay Badge, 🟢 LIVE badge) */}
+        <EtaDelayBanner
           trip={trip}
+          nextStopName={nextStopName}
+          nextStopEta={nextStopEta}
+        />
+
+        {/* 2. Current Stop & Next Stop */}
+        <StopsDetailsCard
           currentStopName={currentStopName}
           nextStopName={nextStopName}
           nextStopEta={nextStopEta}
         />
 
-        <SmartInsights view={view} nextStopEta={nextStopEta} avgSpeed={avgSpeed} />
-
-        {/* Primary actions & seat availability sit above the fold —
-         *  users decide "can I catch it?" before reading analytics. */}
+        {/* 3. Seats (Plenty Seats - 24 Available) */}
         <SeatInformationCard view={view} />
 
-        <CatchThisBusCard />
+        {/* 4. Catch This Bus (USP Action panel) */}
+        <CatchThisBusCard onOpen={() => setBookingOpen(true)} />
 
+        {/* 5. Speed, Heading, GPS Accuracy */}
+        <TelemetryCard trip={trip} />
+
+        {/* 6. Live Location Minimap */}
         <LiveLocationMap view={view} />
 
-        <TripInformationCard
-          view={view}
-          distanceCoveredKm={distanceCoveredKm}
-          distanceRemainingKm={distanceRemainingKm}
-        />
-
+        {/* 7. Timeline (checked ticks visual Allahabad -> Naini -> Mirzapur) */}
         <CompactTimeline view={view} onExpand={onOpenTimeline} />
 
+        {/* 8. Feature Badges (AC, Electric, etc) */}
         <FeatureBadges view={view} />
 
-        {/* Analytics sink to the bottom — nice to see, rarely decisive. */}
+        {/* 9. Live Analytics (graphs) */}
         <LiveAnalyticsCard
           view={view}
           speedHistory={speedHistory}
@@ -210,7 +212,10 @@ function PanelBody({
         onTrackRoute={onTrackRoute}
         onCatchNearby={onOpenTimeline}
         onShare={() => shareTrip(view)}
+        onBook={() => setBookingOpen(true)}
       />
+
+      <CatchThisBusModal isOpen={bookingOpen} onClose={() => setBookingOpen(false)} />
     </>
   );
 }
@@ -337,37 +342,121 @@ function IconButton({
  *  LIVE STATUS STRIP
  * ============================================================ */
 
-function LiveStatusStrip({
+function getHumanOccupancy(trip: LiveBusView["trip"], bus: LiveBusView["bus"]) {
+  const count = trip.passenger.occupiedSeats;
+  const standing = trip.passenger.standingPassengers;
+  const vacant = trip.passenger.vacantSeats;
+  const ratio = Math.min(1.4, (count + standing) / bus.totalSeats);
+  let level = "low";
+  if (ratio >= 1) level = "packed";
+  else if (ratio >= 0.75) level = "high";
+  else if (ratio >= 0.4) level = "medium";
+
+  switch (level) {
+    case "low":
+      return { text: `Plenty Seats (${vacant} Available)`, color: "text-success", bg: "bg-success/10", val: "low" };
+    case "medium":
+      return { text: `Seats Available (${vacant} Left)`, color: "text-warning", bg: "bg-warning/10", val: "medium" };
+    case "high":
+      return { text: `Crowded (${vacant} Left)`, color: "text-warning", bg: "bg-warning/10", val: "high" };
+    default:
+      return { text: `Standing Only (${standing} Standing)`, color: "text-danger", bg: "bg-danger/10", val: "packed" };
+  }
+}
+
+function EtaDelayBanner({
   trip,
-  currentStopName,
   nextStopName,
   nextStopEta,
 }: {
   trip: LiveBusView["trip"];
+  nextStopName?: string;
+  nextStopEta?: string;
+}) {
+  const isDelayed = typeof trip.delay === "number" && trip.delay > 0;
+  return (
+    <div className="flex flex-col gap-2.5 rounded-2xl border border-border/60 bg-card p-3.5 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success/75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+          </span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-success">
+            🟢 LIVE TRACKING
+          </span>
+        </div>
+        {isDelayed ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-warning/15 px-2.5 py-0.5 text-xs font-bold text-warning font-mono">
+            Delayed {trip.delay} min
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2.5 py-0.5 text-xs font-bold text-success font-mono">
+            On Time
+          </span>
+        )}
+      </div>
+      <div className="flex items-baseline gap-1 mt-1">
+        <span className="text-3xl font-extrabold font-display text-brand">
+          {nextStopEta ? formatEta(nextStopEta) : "—"}
+        </span>
+        <span className="text-xs text-muted-foreground font-medium">
+          to reach {nextStopName ?? "next stop"}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function StopsDetailsCard({
+  currentStopName,
+  nextStopName,
+  nextStopEta,
+}: {
   currentStopName?: string;
   nextStopName?: string;
   nextStopEta?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-card/80 to-card/40 p-3">
-      <div className="grid grid-cols-3 gap-3">
-        <SpeedTile speed={trip.speed} />
-        <CompassTile heading={trip.heading} />
-        <GpsTile accuracy={trip.gpsAccuracy} />
+    <div className="grid grid-cols-2 gap-2">
+      <div className="rounded-2xl border border-border/60 bg-card/60 p-3.5 flex flex-col justify-between min-w-0">
+        <div>
+          <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground block">
+            Current Stop
+          </span>
+          <span className="font-display font-semibold text-xs text-foreground block mt-1 truncate">
+            {currentStopName ?? "In transit"}
+          </span>
+        </div>
+        <span className="text-[10px] text-muted-foreground mt-2 block font-medium">
+          📍 Station passed
+        </span>
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <StopChip
-          icon={<MapPin className="h-3 w-3" strokeWidth={2.5} />}
-          label="Current"
-          name={currentStopName ?? "In transit"}
-        />
-        <StopChip
-          icon={<ArrowRight className="h-3 w-3" strokeWidth={2.5} />}
-          label="Next"
-          name={nextStopName ?? "—"}
-          hint={nextStopEta ? `ETA ${formatEta(nextStopEta)}` : undefined}
-          accent
-        />
+
+      <div className="rounded-2xl border border-brand/20 bg-brand/5 p-3.5 flex flex-col justify-between min-w-0">
+        <div>
+          <span className="text-[9px] font-semibold uppercase tracking-wider text-brand block">
+            Next Stop
+          </span>
+          <span className="font-display font-semibold text-xs text-brand block mt-1 truncate">
+            {nextStopName ?? "—"}
+          </span>
+        </div>
+        <span className="text-[10px] text-brand mt-2 block font-semibold font-mono">
+          {nextStopEta ? `ETA ${formatTimeOnly(nextStopEta)}` : "—"}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function TelemetryCard({ trip }: { trip: LiveBusView["trip"] }) {
+  return (
+    <div className="rounded-2xl border border-border/60 bg-card/40 p-3">
+      <div className="grid grid-cols-3 gap-3">
+        <SpeedTile speed={trip.gps.speed} />
+        <CompassTile heading={trip.gps.heading} />
+        <GpsTile accuracy={trip.gps.gpsAccuracy} />
       </div>
     </div>
   );
@@ -430,181 +519,7 @@ function GpsTile({ accuracy }: { accuracy: number }) {
   );
 }
 
-function StopChip({
-  icon,
-  label,
-  name,
-  hint,
-  accent,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  name: string;
-  hint?: string;
-  accent?: boolean;
-}) {
-  return (
-    <div
-      className={`min-w-0 rounded-xl border px-2.5 py-2 ${
-        accent ? "border-brand/30 bg-brand/5" : "border-border/60 bg-card/60"
-      }`}
-    >
-      <div
-        className={`flex items-center gap-1 text-[9px] font-semibold uppercase tracking-wider ${
-          accent ? "text-brand" : "text-muted-foreground"
-        }`}
-      >
-        {icon}
-        {label}
-      </div>
-      <div className="mt-0.5 truncate text-xs font-semibold">{name}</div>
-      {hint && <div className="text-[10px] font-medium text-brand">{hint}</div>}
-    </div>
-  );
-}
 
-/* ============================================================
- *  SMART INSIGHTS
- * ============================================================ */
-
-type Insight = {
-  id: string;
-  tone: "success" | "warning" | "brand" | "muted" | "danger";
-  icon: LucideIcon;
-  title: string;
-  detail?: string;
-};
-
-function computeInsights(
-  view: LiveBusView,
-  nextStopEta: string | undefined,
-  avgSpeed: number,
-): Insight[] {
-  const { trip, bus } = view;
-  const ratio = occupancyRatio(trip, bus);
-  const insights: Insight[] = [];
-
-  if (nextStopEta) {
-    const sec = Math.round((new Date(nextStopEta).getTime() - Date.now()) / 1000);
-    if (sec > 0 && sec < 120) {
-      insights.push({
-        id: "approach",
-        tone: "brand",
-        icon: MapPin,
-        title: "Approaching next stop",
-        detail: `Arriving in about ${sec < 60 ? `${sec}s` : "1 min"}`,
-      });
-    }
-  }
-
-  if (ratio >= 0.85 && trip.vacantSeats > 0) {
-    insights.push({
-      id: "filling",
-      tone: "warning",
-      icon: TrendingUp,
-      title: "Seats are filling fast",
-      detail: `Only ${trip.vacantSeats} seat${trip.vacantSeats === 1 ? "" : "s"} left`,
-    });
-  } else if (ratio < 0.4) {
-    insights.push({
-      id: "low-occ",
-      tone: "success",
-      icon: TrendingDown,
-      title: "Low occupancy — likely a seat",
-      detail: `${trip.vacantSeats} of ${bus.totalSeats} seats free`,
-    });
-  }
-
-  if (typeof trip.delay === "number" && trip.delay >= 3) {
-    insights.push({
-      id: "delay",
-      tone: "warning",
-      icon: Timer,
-      title: `Running about ${trip.delay} min late`,
-      detail: "ETAs are adjusted for the current delay.",
-    });
-  } else if (typeof trip.delay === "number" && trip.delay <= -2) {
-    insights.push({
-      id: "early",
-      tone: "success",
-      icon: Timer,
-      title: `Running ${Math.abs(trip.delay)} min early`,
-    });
-  }
-
-  if (trip.status === "running" && trip.speed < 5) {
-    insights.push({
-      id: "slow",
-      tone: "muted",
-      icon: Activity,
-      title: "Currently very slow",
-      detail: "Likely a stop, signal, or heavy traffic.",
-    });
-  }
-
-  if (ratio < 0.9 && trip.vacantSeats > 0 && trip.status === "running" && avgSpeed > 12) {
-    insights.push({
-      id: "recommend",
-      tone: "brand",
-      icon: Sparkles,
-      title: "Recommended to board",
-      detail: "Seats available and moving on schedule.",
-    });
-  }
-
-  return insights.slice(0, 3);
-}
-
-const TONE_CLS: Record<Insight["tone"], string> = {
-  success: "border-success/30 bg-success/5 text-success",
-  warning: "border-warning/30 bg-warning/5 text-warning",
-  brand: "border-brand/30 bg-brand/5 text-brand",
-  muted: "border-border/60 bg-muted/40 text-muted-foreground",
-  danger: "border-danger/30 bg-danger/5 text-danger",
-};
-
-function SmartInsights({
-  view,
-  nextStopEta,
-  avgSpeed,
-}: {
-  view: LiveBusView;
-  nextStopEta?: string;
-  avgSpeed: number;
-}) {
-  const insights = useMemo(
-    () => computeInsights(view, nextStopEta, avgSpeed),
-    [view, nextStopEta, avgSpeed],
-  );
-  if (insights.length === 0) return null;
-  return (
-    <section aria-label="Smart insights" className="space-y-1.5">
-      <SectionLabel icon={Sparkles}>Smart insights</SectionLabel>
-      <div className="space-y-1.5">
-        {insights.map((i) => {
-          const Icon = i.icon;
-          return (
-            <motion.div
-              key={i.id}
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
-              className={`flex items-start gap-2 rounded-xl border px-2.5 py-2 ${TONE_CLS[i.tone]}`}
-            >
-              <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={2.4} />
-              <div className="min-w-0 flex-1">
-                <div className="text-xs font-semibold leading-tight text-foreground">{i.title}</div>
-                {i.detail && (
-                  <div className="text-[11px] leading-snug text-muted-foreground">{i.detail}</div>
-                )}
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
 
 /* ============================================================
  *  LIVE LOCATION MINI-MAP (SVG based)
@@ -653,7 +568,7 @@ function LiveLocationMap({ view }: { view: LiveBusView }) {
       })
       .join(" ");
 
-  const [bx, by] = project(trip.latitude, trip.longitude);
+  const [bx, by] = project(trip.gps.latitude, trip.gps.longitude);
   const [ox, oy] = project(pts[0][0], pts[0][1]);
   const [dx, dy] = project(pts[pts.length - 1][0], pts[pts.length - 1][1]);
 
@@ -736,118 +651,9 @@ function LegendDot({ cls, label }: { cls: string; label: string }) {
   );
 }
 
-/* ============================================================
- *  TRIP INFORMATION
- * ============================================================ */
 
-function TripInformationCard({
-  view,
-  distanceCoveredKm,
-  distanceRemainingKm,
-}: {
-  view: LiveBusView;
-  distanceCoveredKm: number;
-  distanceRemainingKm: number;
-}) {
-  const { trip, route } = view;
-  const origin = route.origin ?? route.stops[0]?.name ?? "—";
-  const destination = route.destination ?? route.stops[route.stops.length - 1]?.name ?? "—";
-  const pct = Math.round(trip.routeProgress * 100);
-  const depIso = trip.startTime ?? trip.scheduledStart;
-  const arrIso = trip.expectedArrival ?? trip.scheduledEnd;
 
-  return (
-    <section aria-label="Trip information" className="space-y-1.5">
-      <SectionLabel icon={RouteIcon}>Trip</SectionLabel>
-      <div className="space-y-3 rounded-2xl border border-border/60 bg-card/70 p-3">
-        <div className="flex items-center gap-2">
-          <div className="flex flex-1 items-center gap-2 truncate">
-            <span className="h-2 w-2 rounded-full bg-success" />
-            <span className="truncate text-sm font-semibold">{origin}</span>
-          </div>
-          <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-          <div className="flex flex-1 items-center justify-end gap-2 truncate">
-            <span className="truncate text-right text-sm font-semibold">{destination}</span>
-            <span className="h-2 w-2 rounded-full bg-danger" />
-          </div>
-        </div>
 
-        <div>
-          <div className="relative h-2 overflow-hidden rounded-full bg-muted">
-            <motion.div
-              initial={false}
-              animate={{ width: `${pct}%` }}
-              transition={{ type: "spring", damping: 30, stiffness: 200 }}
-              className="h-full rounded-full bg-gradient-to-r from-brand to-brand/70"
-            />
-          </div>
-          <div className="mt-1.5 flex items-center justify-between text-[10px] font-medium text-muted-foreground">
-            <span>{formatKm(distanceCoveredKm)} covered</span>
-            <span className="font-semibold text-brand">{pct}%</span>
-            <span>{formatKm(distanceRemainingKm)} left</span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-2 text-center">
-          <TimeStat icon={Clock} label="Departure" value={formatTimeOnly(depIso)} />
-          <TimeStat icon={Clock} label="Arrival" value={formatTimeOnly(arrIso)} accent />
-          <TimeStat
-            icon={Timer}
-            label="Delay"
-            value={
-              typeof trip.delay === "number"
-                ? `${trip.delay > 0 ? "+" : ""}${trip.delay}m`
-                : "On time"
-            }
-            tone={
-              typeof trip.delay === "number"
-                ? trip.delay > 2
-                  ? "warning"
-                  : trip.delay < -1
-                    ? "success"
-                    : "muted"
-                : "success"
-            }
-          />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function TimeStat({
-  icon: Icon,
-  label,
-  value,
-  accent,
-  tone,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: string;
-  accent?: boolean;
-  tone?: "success" | "warning" | "muted";
-}) {
-  const toneCls =
-    tone === "warning"
-      ? "text-warning"
-      : tone === "success"
-        ? "text-success"
-        : tone === "muted"
-          ? "text-muted-foreground"
-          : accent
-            ? "text-brand"
-            : "text-foreground";
-  return (
-    <div className="rounded-xl bg-muted/40 px-2 py-1.5">
-      <div className="flex items-center justify-center gap-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
-        <Icon className="h-2.5 w-2.5" strokeWidth={2.5} />
-        {label}
-      </div>
-      <div className={`mt-0.5 font-display text-sm font-bold ${toneCls}`}>{value}</div>
-    </div>
-  );
-}
 
 function formatTimeOnly(iso?: string) {
   if (!iso) return "—";
@@ -862,12 +668,12 @@ function formatTimeOnly(iso?: string) {
 
 function SeatInformationCard({ view }: { view: LiveBusView }) {
   const { trip, bus } = view;
-  const level = occupancyLevel(trip, bus);
-  const ratio = Math.min(1, occupancyRatio(trip, bus));
+  const occInfo = getHumanOccupancy(trip, bus);
+  const ratio = Math.min(1, (trip.passenger.occupiedSeats + trip.passenger.standingPassengers) / bus.totalSeats);
   const pct = Math.round(ratio * 100);
-  const totalOnboard = trip.occupiedSeats + trip.standingPassengers;
+  const totalOnboard = trip.passenger.occupiedSeats + trip.passenger.standingPassengers;
   const women = bus.womenSeats ?? 0;
-  const colorVar = `var(--color-occ-${level === "packed" ? "packed" : level})`;
+  const colorVar = `var(--color-occ-${occInfo.val})`;
 
   return (
     <section aria-label="Seat information" className="space-y-1.5">
@@ -878,17 +684,20 @@ function SeatInformationCard({ view }: { view: LiveBusView }) {
             value={pct}
             color={colorVar}
             centerLabel={`${pct}%`}
-            sublabel={occupancyLabel(level)}
+            sublabel={occupancyLabel(occInfo.val as any)}
           />
           <div className="min-w-0 flex-1 space-y-1.5">
+            <div className={`text-[10px] font-bold rounded px-2 py-0.5 inline-block ${occInfo.bg} ${occInfo.color}`}>
+              {occInfo.text}
+            </div>
             <SeatRow icon={Circle} label="Total seats" value={bus.totalSeats} />
-            <SeatRow icon={CircleCheck} label="Available" value={trip.vacantSeats} tone="success" />
-            <SeatRow icon={Users} label="Occupied" value={trip.occupiedSeats} />
-            {trip.standingPassengers > 0 && (
+            <SeatRow icon={CircleCheck} label="Available" value={trip.passenger.vacantSeats} tone="success" />
+            <SeatRow icon={Users} label="Occupied" value={trip.passenger.occupiedSeats} />
+            {trip.passenger.standingPassengers > 0 && (
               <SeatRow
                 icon={Footprints}
                 label="Standing"
-                value={trip.standingPassengers}
+                value={trip.passenger.standingPassengers}
                 tone="warning"
               />
             )}
@@ -1097,7 +906,7 @@ function LiveAnalyticsCard({
             title="Speed"
             unit="km/h"
             data={speedHistory}
-            current={Math.round(trip.speed)}
+            current={Math.round(trip.gps.speed)}
             avg={avgSpeed}
             color="var(--color-brand)"
           />
@@ -1296,11 +1105,13 @@ function ActionsBar({
   onTrackRoute,
   onCatchNearby,
   onShare,
+  onBook,
 }: {
   routeFocused: boolean;
   onTrackRoute: () => void;
   onCatchNearby: () => void;
   onShare: () => void;
+  onBook: () => void;
 }) {
   return (
     <div className="sticky bottom-0 z-10 border-t border-border/60 bg-card/85 p-3 backdrop-blur-xl">
@@ -1308,7 +1119,7 @@ function ActionsBar({
         <button
           type="button"
           onClick={onTrackRoute}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-card ${
+          className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-card cursor-pointer ${
             routeFocused
               ? "bg-brand text-brand-foreground shadow-sm"
               : "bg-accent text-foreground hover:bg-accent/70"
@@ -1320,7 +1131,7 @@ function ActionsBar({
         <button
           type="button"
           onClick={onCatchNearby}
-          className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand px-3 py-2 text-xs font-semibold text-brand-foreground shadow-sm transition-transform hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+          className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand px-3 py-2 text-xs font-semibold text-brand-foreground shadow-sm transition-transform hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-card cursor-pointer"
         >
           <MapPin className="h-3.5 w-3.5" strokeWidth={2.4} />
           Nearby stops
@@ -1328,19 +1139,18 @@ function ActionsBar({
         <button
           type="button"
           onClick={onShare}
-          className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border/60 bg-card px-3 py-2 text-xs font-semibold text-foreground hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+          className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border/60 bg-card px-3 py-2 text-xs font-semibold text-foreground hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-card cursor-pointer"
         >
           <Share2 className="h-3.5 w-3.5" strokeWidth={2.4} />
           Share live bus
         </button>
         <button
           type="button"
-          disabled
-          title="Booking coming soon"
-          className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-border/70 px-3 py-2 text-xs font-semibold text-muted-foreground"
+          onClick={onBook}
+          className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-success px-3 py-2 text-xs font-semibold text-success-foreground hover:bg-success/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-success focus-visible:ring-offset-2 focus-visible:ring-offset-card cursor-pointer"
         >
           <Ticket className="h-3.5 w-3.5" strokeWidth={2.4} />
-          Book (soon)
+          Book Ticket
         </button>
       </div>
     </div>
@@ -1389,7 +1199,7 @@ function useSampleHistory(value: number, stamp: string, cap = 30): number[] {
 async function shareTrip(view: LiveBusView) {
   const url =
     typeof window !== "undefined"
-      ? `${window.location.origin}/radar?trip=${encodeURIComponent(view.trip.tripId)}`
+      ? `${window.location.origin}/search?trip=${encodeURIComponent(view.trip.tripId)}`
       : "";
   const text = `Track ${view.bus.busNumber} on ${view.route.name} live on BusSetu`;
   try {

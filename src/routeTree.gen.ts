@@ -9,20 +9,20 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as RoutesRouteImport } from './routes/routes'
-import { Route as RadarRouteImport } from './routes/radar'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RoutesRoute = RoutesRouteImport.update({
   id: '/routes',
   path: '/routes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RadarRoute = RadarRouteImport.update({
-  id: '/radar',
-  path: '/radar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -45,54 +45,54 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
-  '/radar': typeof RadarRoute
   '/routes': typeof RoutesRoute
+  '/search': typeof SearchRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
-  '/radar': typeof RadarRoute
   '/routes': typeof RoutesRoute
+  '/search': typeof SearchRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
-  '/radar': typeof RadarRoute
   '/routes': typeof RoutesRoute
+  '/search': typeof SearchRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/contact' | '/radar' | '/routes'
+  fullPaths: '/' | '/about' | '/contact' | '/routes' | '/search'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/contact' | '/radar' | '/routes'
-  id: '__root__' | '/' | '/about' | '/contact' | '/radar' | '/routes'
+  to: '/' | '/about' | '/contact' | '/routes' | '/search'
+  id: '__root__' | '/' | '/about' | '/contact' | '/routes' | '/search'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   ContactRoute: typeof ContactRoute
-  RadarRoute: typeof RadarRoute
   RoutesRoute: typeof RoutesRoute
+  SearchRoute: typeof SearchRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/routes': {
       id: '/routes'
       path: '/routes'
       fullPath: '/routes'
       preLoaderRoute: typeof RoutesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/radar': {
-      id: '/radar'
-      path: '/radar'
-      fullPath: '/radar'
-      preLoaderRoute: typeof RadarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -123,8 +123,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   ContactRoute: ContactRoute,
-  RadarRoute: RadarRoute,
   RoutesRoute: RoutesRoute,
+  SearchRoute: SearchRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

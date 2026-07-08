@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Navbar } from "@/components/layout/Navbar";
@@ -11,31 +11,48 @@ import { RouteResultsPanel } from "@/components/panels/RouteResultsPanel";
 import { RouteTimeline } from "@/components/panels/RouteTimeline";
 import { LiveRadarAnnouncer } from "@/components/map/LiveRadarAnnouncer";
 import { OfflineBanner } from "@/components/state/OfflineBanner";
+import { LiveReplayControl } from "@/components/map/LiveReplayControl";
+import { AiAssistantPanel } from "@/components/panels/AiAssistantPanel";
 import { useUiStore } from "@/store/useUiStore";
 import { useLiveStore } from "@/store/useLiveStore";
 
-export const Route = createFileRoute("/radar")({
+type SearchParams = {
+  from?: string;
+  to?: string;
+  via?: string;
+  trip?: string;
+};
+
+export const Route = createFileRoute("/search")({
+  validateSearch: (search: Record<string, unknown>): SearchParams => ({
+    from: typeof search.from === "string" ? search.from : undefined,
+    to: typeof search.to === "string" ? search.to : undefined,
+    via: typeof search.via === "string" ? search.via : undefined,
+    trip: typeof search.trip === "string" ? search.trip : undefined,
+  }),
   head: () => ({
     meta: [
-      { title: "Live Radar — BusSetu" },
+      { title: "Live Map — BusSetu" },
       {
         name: "description",
         content:
           "See every bus moving live on the map. Filter by operator, seats, or route — track any trip in real time.",
       },
-      { property: "og:title", content: "Live Bus Radar — BusSetu" },
+      { property: "og:title", content: "Live Bus Map — BusSetu" },
       {
         property: "og:description",
         content: "Real-time bus tracking across cities and highways. Powered by BusSetu.",
       },
     ],
   }),
-  component: RadarPage,
+  component: SearchPage,
 });
 
-function RadarPage() {
+function SearchPage() {
   const selectedTripId = useUiStore((s) => s.selectedTripId);
   const routeQueryActive = useUiStore((s) => s.routeQuery.active);
+  const setRouteQuery = useUiStore((s) => s.setRouteQuery);
+  const selectTrip = useUiStore((s) => s.selectTrip);
   const busNumber = useLiveStore((s) => {
     if (!selectedTripId) return null;
     const trip = s.tripsById[selectedTripId];
@@ -43,6 +60,27 @@ function RadarPage() {
     return s.busesById[trip.busId]?.busNumber ?? null;
   });
   const lastToastedRef = useRef<string | null>(null);
+  const initializedRef = useRef(false);
+
+  // Read TanStack Router search params (from /routes navigation or bookmarked URL)
+  const searchParams = useSearch({ from: "/search" });
+
+  useEffect(() => {
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+
+    const { from, to, via, trip } = searchParams;
+
+    // Pre-fill route search if from/to params present
+    if (from || to) {
+      setRouteQuery({ from: from ?? "", to: to ?? "", via: via ?? "" });
+    }
+
+    // Auto-select bus if trip param present
+    if (trip) {
+      selectTrip(trip);
+    }
+  }, [searchParams, setRouteQuery, selectTrip]);
 
   useEffect(() => {
     if (!selectedTripId || !busNumber) return;
@@ -73,6 +111,11 @@ function RadarPage() {
           {routeQueryActive ? <RouteResultsPanel /> : <NearbyBusesPanel />}
         </div>
 
+        {/* Bottom center: Live Replay control bar */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-4 z-[540] flex justify-center">
+          <LiveReplayControl />
+        </div>
+
         {/* Right: bus details */}
         <BusDetailsPanel />
 
@@ -81,6 +124,9 @@ function RadarPage() {
 
         {/* Screen-reader live announcements for radar changes */}
         <LiveRadarAnnouncer />
+
+        {/* AI Assistant Chat Panel */}
+        <AiAssistantPanel />
 
         {/* Offline / stale-data top banner */}
         <OfflineBanner />

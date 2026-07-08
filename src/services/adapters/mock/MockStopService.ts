@@ -1,5 +1,5 @@
 import type { StopService } from "@/services/contracts/StopService";
-import { MOCK_STOPS } from "@/data/mock/stops";
+import { MOCK_STOPS } from "@/data/stops.mock";
 import { haversineKm } from "@/utils/geo";
 import { withLatency } from "./latency";
 

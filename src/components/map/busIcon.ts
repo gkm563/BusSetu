@@ -22,13 +22,14 @@ export function busDivIcon(opts: {
   level: OccupancyLevel;
   kind: MarkerKind;
   heading: number;
+  busNumber: string;
   selected?: boolean;
   hovered?: boolean;
   pulse?: boolean;
   dimmed?: boolean;
 }) {
   const c = color(opts.level, opts.kind);
-  const size = opts.selected ? 44 : opts.hovered ? 40 : 34;
+  const size = opts.selected ? 36 : opts.hovered ? 34 : 30;
   const opacity = opts.dimmed ? 0.35 : 1;
 
   const ringHtml = opts.selected
@@ -37,26 +38,76 @@ export function busDivIcon(opts: {
       ? `<span style="position:absolute;inset:-4px;border-radius:9999px;background:${c};opacity:.18;animation:pulse-ring 2.4s ease-out infinite;"></span>`
       : "";
 
+  // Get a readable short format, e.g. "CP 2304" from "UP 65 CP 2304"
+  const parts = opts.busNumber.split(" ");
+  const shortNum = parts.length >= 2 ? parts.slice(-2).join(" ") : opts.busNumber;
+
   const html = `
-    <div style="position:relative;width:${size}px;height:${size}px;opacity:${opacity};">
-      ${ringHtml}
+    <div style="
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 70px;
+      height: 70px;
+      margin-left: -20px;
+      margin-top: -20px;
+      opacity: ${opacity};
+    ">
+      <!-- Rotatable Bus Icon Container -->
       <div data-bus-rotor style="
-        position:absolute;inset:0;
-        border-radius:12px;
-        background:${c};
-        color:white;
-        display:grid;place-items:center;
-        transform: rotate(${opts.heading - 90}deg);
-        box-shadow: 0 8px 18px -6px rgb(0 0 0 / .45);
-        border: ${opts.selected ? 3 : opts.hovered ? 2.5 : 2}px solid rgb(255 255 255 / .9);
-        transition: box-shadow 200ms ease-out, transform 500ms linear;
+        position: relative;
+        width: ${size}px;
+        height: ${size + 4}px;
+        transform: rotate(${opts.heading}deg);
+        transition: transform 500ms linear;
       ">
-        <svg viewBox="0 0 24 24" width="${size * 0.55}" height="${size * 0.55}" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate(90deg);">
-          <path d="M4 16V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10" />
-          <path d="M4 12h16" />
-          <circle cx="8" cy="17" r="1.6" />
-          <circle cx="16" cy="17" r="1.6" />
+        ${ringHtml}
+        <svg viewBox="0 0 32 36" fill="none" style="width: 100%; height: 100%;">
+          <!-- Side mirrors -->
+          <rect x="1" y="8" width="2" height="5" rx="1.2" fill="${c}" stroke="white" stroke-width="0.8" />
+          <rect x="29" y="8" width="2" height="5" rx="1.2" fill="${c}" stroke="white" stroke-width="0.8" />
+          
+          <!-- Bus body -->
+          <rect x="4" y="2" width="24" height="32" rx="5" fill="${c}" stroke="white" stroke-width="2" />
+          
+          <!-- Windshield (Blue screen) -->
+          <rect x="7" y="5" width="18" height="6" rx="1.5" fill="#38BDF8" stroke="white" stroke-width="0.8" />
+          
+          <!-- Roof details (AC unit vent) -->
+          <rect x="9" y="15" width="14" height="8" rx="2" fill="white" fill-opacity="0.35" stroke="white" stroke-width="0.8" />
+          
+          <!-- Direction indicator arrow -->
+          <path d="M16 14l3.5 4h-7z" fill="white" />
+          
+          <!-- Headlights -->
+          <circle cx="8" cy="2.5" r="1.2" fill="white" />
+          <circle cx="24" cy="2.5" r="1.2" fill="white" />
+          
+          <!-- Rear brake lights -->
+          <rect x="7" y="32.5" width="3" height="1" fill="#EF4444" />
+          <rect x="22" y="32.5" width="3" height="1" fill="#EF4444" />
         </svg>
+      </div>
+      
+      <!-- Static Horizontal label -->
+      <div style="
+        margin-top: 3px;
+        background: rgba(15, 23, 42, 0.9);
+        color: white;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 8px;
+        font-weight: 700;
+        letter-spacing: -0.2px;
+        padding: 1.5px 4px;
+        border-radius: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        white-space: nowrap;
+        pointer-events: auto;
+      ">
+        ${shortNum}
       </div>
     </div>
   `;
@@ -64,8 +115,8 @@ export function busDivIcon(opts: {
   return L.divIcon({
     html,
     className: "bus-marker-shadow",
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
   });
 }
 
@@ -78,14 +129,72 @@ export function stopDivIcon() {
   });
 }
 
-export function userDivIcon() {
+export function activeStopDivIcon(name: string) {
   return L.divIcon({
-    html: `<div style="position:relative;width:20px;height:20px;">
-      <span style="position:absolute;inset:-8px;border-radius:9999px;background:var(--color-brand);opacity:.25;animation:pulse-ring 2s ease-out infinite;"></span>
-      <div style="position:absolute;inset:0;border-radius:9999px;background:var(--color-brand);border:3px solid white;box-shadow:0 2px 6px rgb(0 0 0 / .3);"></div>
+    html: `<div style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;width:80px;height:50px;margin-left:-33px;margin-top:-25px;">
+      <div style="width:12px;height:12px;border-radius:9999px;background:#2563EB;border:2.5px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3);position:relative;z-index:10;"></div>
+      <div style="
+        margin-top: 3px;
+        background: white;
+        color: #1E293B;
+        font-family: system-ui, sans-serif;
+        font-size: 8px;
+        font-weight: 700;
+        padding: 1px 3.5px;
+        border-radius: 4px;
+        border: 1px solid #CBD5E1;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        white-space: nowrap;
+        pointer-events: none;
+      ">
+        ${name}
+      </div>
     </div>`,
     className: "",
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
+    iconSize: [14, 14],
+    iconAnchor: [7, 7],
+  });
+}
+
+export function userDivIcon() {
+  return L.divIcon({
+    html: `<div style="position:relative;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">
+      <span style="position:absolute;inset:-6px;border-radius:9999px;background:var(--color-brand);opacity:.28;animation:pulse-ring 2s ease-out infinite;"></span>
+      <div style="
+        position:absolute;
+        inset:0;
+        border-radius:9999px;
+        background:var(--color-brand);
+        border:2.5px solid white;
+        box-shadow:0 3px 8px rgba(0, 0, 0, 0.4);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+      ">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+          <circle cx="12" cy="7" r="4" fill="white" />
+          <path d="M5.5 21a8.5 8.5 0 0 1 13 0" />
+        </svg>
+      </div>
+      <div style="
+        position: absolute;
+        bottom: -16px;
+        background: rgba(15, 23, 42, 0.95);
+        color: white;
+        font-family: system-ui, sans-serif;
+        font-size: 8px;
+        font-weight: 800;
+        padding: 1px 4.5px;
+        border-radius: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        white-space: nowrap;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      ">
+        YOU
+      </div>
+    </div>`,
+    className: "",
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
   });
 }

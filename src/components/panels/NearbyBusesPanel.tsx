@@ -4,7 +4,6 @@ import {
   ChevronDown,
   ChevronUp,
   CircleCheck,
-  Compass,
   Footprints,
   Gauge,
   Loader2,
@@ -317,47 +316,50 @@ function NearbyCard({
         onMouseLeave={() => onHover(false)}
         onFocus={() => onHover(true)}
         onBlur={() => onHover(false)}
-        className={`group w-full rounded-2xl border p-3 text-left transition-all ${
+        className={`group w-full rounded-2xl border p-3.5 text-left transition-all flex flex-col gap-3 ${
           selected
-            ? "border-brand bg-brand/5 shadow-md"
-            : "border-border/60 bg-card/70 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-md"
+            ? "border-brand bg-brand/10 shadow-md ring-2 ring-brand/10"
+            : "border-border/60 bg-card/85 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-md"
         }`}
       >
-        {/* Header */}
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="truncate font-display text-sm font-semibold">{n.bus.busNumber}</span>
+        {/* Header segment */}
+        <div className="flex items-center justify-between gap-3 w-full">
+          <div className="min-w-0 flex-1 space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="bg-brand/10 text-brand px-2 py-0.5 rounded-lg border border-brand/20 text-xs font-mono font-extrabold uppercase tracking-wider">
+                🚌 {n.bus.busNumber}
+              </span>
               <span
-                className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider ${rel.cls}`}
+                className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${rel.cls}`}
               >
                 {rel.text}
               </span>
             </div>
-            <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
-              {n.route.name} · {n.operator.name}
+            <div className="truncate text-xs font-semibold text-muted-foreground/80">
+              {n.route.name} · <span className="text-foreground">{n.operator.name}</span>
             </div>
           </div>
-          <div className="shrink-0 text-right">
-            <div className="font-display text-sm font-semibold leading-tight">
+          
+          <div className="shrink-0 rounded-xl bg-brand/5 border border-brand/10 p-2 text-center min-w-[75px]">
+            <div className="font-mono text-sm font-black text-brand leading-none">
               {formatKm(n.distanceKm)}
             </div>
-            <div className="text-[10px] text-muted-foreground">
+            <div className="text-[8px] text-muted-foreground uppercase font-bold tracking-wider mt-1">
               ETA {formatSec(n.nextStopEtaSec)}
             </div>
           </div>
         </div>
 
-        {/* Badges */}
+        {/* Badges segment */}
         {n.badges.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1 border-t border-border/40 pt-2.5">
             {n.badges.map((b) => {
               const bd = BADGES[b];
               const Icon = bd.Icon;
               return (
                 <span
                   key={b}
-                  className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${bd.cls}`}
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold ${bd.cls}`}
                 >
                   <Icon className="h-3 w-3" aria-hidden="true" strokeWidth={2} />
                   {bd.label}
@@ -367,33 +369,35 @@ function NearbyCard({
           </div>
         )}
 
-        {/* Metrics row */}
-        <div className="mt-2.5 grid grid-cols-4 gap-1.5 text-[10px]">
-          <Metric icon={<Gauge className="h-3 w-3" />} label={`${Math.round(n.trip.speed)} km/h`} />
-          <Metric icon={<Users className="h-3 w-3" />} label={`${n.seatAvailability} seats`} />
-          <Metric icon={<Compass className="h-3 w-3" />} label={`${n.occupancyPct}%`} />
+        {/* Metrics segment */}
+        <div className="grid grid-cols-4 gap-2 text-[10px] bg-muted/40 rounded-xl p-2.5 border border-border/40">
+          <Metric icon={<Gauge className="h-3.5 w-3.5" />} label={`${Math.round(n.trip.gps.speed)} km/h`} />
+          <Metric icon={<Armchair className="h-3.5 w-3.5" />} label={`${n.seatAvailability} seats`} />
+          <Metric icon={<Users className="h-3.5 w-3.5" />} label={`${n.occupancyPct}% crowd`} />
           <Metric
-            icon={<MapPin className="h-3 w-3" />}
+            icon={<MapPin className="h-3.5 w-3.5" />}
             label={`${formatKm(n.walkingToNearestStopKm)} walk`}
           />
         </div>
 
-        {/* Stops */}
-        <div className="mt-2 flex items-center gap-1.5 text-[10px] text-muted-foreground">
-          <span className="truncate">
-            <span className="text-foreground/70">Now:</span>{" "}
-            {n.trip.currentStopId
-              ? // Show a compact name — panel keeps this narrow.
-                truncate(n.route.stops.find((s) => s.id === n.trip.currentStopId)?.name)
-              : "—"}
-          </span>
-          <span className="text-muted-foreground/50">→</span>
-          <span className="truncate">
-            <span className="text-foreground/70">Next:</span>{" "}
-            {n.trip.nextStopId
-              ? truncate(n.route.stops.find((s) => s.id === n.trip.nextStopId)?.name)
-              : "—"}
-          </span>
+        {/* Stops segment */}
+        <div className="flex items-center gap-2 text-[10px] text-muted-foreground/90 border-t border-border/40 pt-2.5 w-full">
+          <MapPin className="h-3.5 w-3.5 text-brand shrink-0" aria-hidden />
+          <div className="min-w-0 flex-1 truncate">
+            <span className="text-foreground/75 font-semibold">Now:</span>{" "}
+            <span className="font-bold text-foreground">
+              {n.trip.currentStopId
+                ? truncate(n.route.stops.find((s) => s.id === n.trip.currentStopId)?.name)
+                : "—"}
+            </span>
+            <span className="mx-1.5 text-muted-foreground/45">→</span>
+            <span className="text-foreground/75 font-semibold">Next:</span>{" "}
+            <span className="font-bold text-foreground">
+              {n.trip.nextStopId
+                ? truncate(n.route.stops.find((s) => s.id === n.trip.nextStopId)?.name)
+                : "—"}
+            </span>
+          </div>
         </div>
       </button>
     </li>

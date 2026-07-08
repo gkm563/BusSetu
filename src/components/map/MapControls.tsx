@@ -74,8 +74,8 @@ export function MapControls({
   }
 
   return (
-    <div className="absolute right-4 top-4 z-[500] flex flex-col items-end gap-2">
-      <div className="glass-panel flex flex-col overflow-hidden rounded-2xl p-1">
+    <div className="absolute right-4 top-4 z-[500] flex flex-col items-end gap-2.5">
+      <div className="flex flex-col gap-2">
         <CtrlBtn label="Locate me" onClick={locateMe}>
           <Navigation className="h-4 w-4" />
         </CtrlBtn>
@@ -100,7 +100,7 @@ export function MapControls({
       </div>
 
       {layersOpen && (
-        <div className="glass-panel w-56 animate-scale-in rounded-2xl p-3 text-sm">
+        <div className="glass-panel w-56 animate-scale-in rounded-2xl p-3 text-sm border border-border/60 shadow-lg">
           <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             Base map
           </div>
@@ -164,7 +164,7 @@ function CtrlBtn({
       aria-label={label}
       title={label}
       onClick={onClick}
-      className={`grid h-9 w-9 place-items-center rounded-xl transition-colors ${
+      className={`glass-panel grid h-10 w-10 place-items-center rounded-full transition-all border border-border/50 shadow-md cursor-pointer hover:scale-105 active:scale-95 ${
         active ? "bg-brand text-brand-foreground" : "text-foreground hover:bg-accent"
       }`}
     >

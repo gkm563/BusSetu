@@ -42,8 +42,8 @@ export function LiveRadarAnnouncer() {
     }
     if (lastRef.current.id !== trip.tripId) {
       const etaSec = etaSecondsFromIso(nextStopEtaIso(trip));
-      const speed = Math.round(trip.speed);
-      const seats = trip.vacantSeats;
+      const speed = Math.round(trip.gps.speed);
+      const seats = trip.passenger.vacantSeats;
       setMessage(
         `Now tracking bus ${bus.busNumber} on ${route.name}. ` +
           `${formatEta(etaSec)} to next stop, ${speed} kilometres per hour, ` +
@@ -71,8 +71,8 @@ export function LiveRadarAnnouncer() {
       if (now - last.at < 8000) return;
 
       const etaSec = etaSecondsFromIso(nextStopEtaIso(trip));
-      const speed = Math.round(trip.speed);
-      const seats = trip.vacantSeats;
+      const speed = Math.round(trip.gps.speed);
+      const seats = trip.passenger.vacantSeats;
 
       const parts: string[] = [];
       if (etaSec != null && last.etaSec != null && Math.abs(etaSec - last.etaSec) >= 30) {

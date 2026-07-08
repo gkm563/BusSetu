@@ -188,7 +188,7 @@ export function RadarDemoModal({ open, onClose }: { open: boolean; onClose: () =
                   <Radar className="h-4 w-4" />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-sm font-semibold">Live Radar · Demo</div>
+                  <div className="text-sm font-semibold">Live Tracking · Demo</div>
                   <div className="text-[11px] text-muted-foreground">
                     Interactive preview · synthetic data
                   </div>
@@ -196,10 +196,10 @@ export function RadarDemoModal({ open, onClose }: { open: boolean; onClose: () =
               </div>
               <div className="flex items-center gap-2">
                 <Link
-                  to="/radar"
+                  to="/search"
                   className="inline-flex items-center gap-1.5 rounded-full bg-brand px-3 py-1.5 text-xs font-semibold text-brand-foreground shadow-sm transition-transform hover:scale-[1.03]"
                 >
-                  Open full radar
+                  Open Live Map
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
                 <button

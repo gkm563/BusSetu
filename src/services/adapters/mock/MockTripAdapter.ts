@@ -1,9 +1,9 @@
 import type { TripService } from "@/services/contracts/TripService";
 import type { Trip } from "@/types/trip";
 import type { SeatUpdate, TripEvent, TripPositionUpdate, Unsubscribe } from "@/types/events";
-import { seedTrips } from "@/data/mock/trips";
-import { MOCK_ROUTES } from "@/data/mock/routes";
-import { MOCK_BUSES } from "@/data/mock/buses";
+import { seedTrips } from "@/data/trips.mock";
+import { MOCK_ROUTES } from "@/data/routes.mock";
+import { MOCK_BUSES } from "@/data/buses.mock";
 import { interpolateAlongPolyline } from "@/utils/geo";
 
 /**
@@ -32,7 +32,7 @@ function createMockTripAdapter(): TripService {
 
       // Advance progress based on speed. distanceKm covered per second.
       const route = MOCK_ROUTES.find((r) => r.id === trip.routeId)!;
-      const kmPerSec = trip.speed / 3600;
+      const kmPerSec = trip.gps.speed / 3600;
       const delta = (kmPerSec / route.distanceKm) * (TICK_MS / 1000);
       trip.routeProgress = Math.min(1, trip.routeProgress + delta);
 
@@ -44,26 +44,27 @@ function createMockTripAdapter(): TripService {
 
       const poly = directionalPolyline(trip.routeId, trip.direction);
       const { lat, lng, heading } = interpolateAlongPolyline(poly, trip.routeProgress);
-      trip.latitude = lat;
-      trip.longitude = lng;
-      trip.heading = heading;
+      trip.gps.latitude = lat;
+      trip.gps.longitude = lng;
+      trip.gps.heading = heading;
+      trip.gps.timestamp = new Date(now).toISOString();
       trip.lastUpdated = new Date(now).toISOString();
 
       // Occasional small speed fluctuation (scaled to tick)
       if (trip.status === "running") {
-        trip.speed = Math.max(15, Math.min(70, trip.speed + (Math.random() - 0.5) * 2));
+        trip.gps.speed = Math.max(15, Math.min(70, trip.gps.speed + (Math.random() - 0.5) * 2));
       } else if (trip.status === "boarding") {
-        trip.speed = 0;
+        trip.gps.speed = 0;
       }
 
       const patch: TripPositionUpdate = {
-        latitude: trip.latitude,
-        longitude: trip.longitude,
-        heading: trip.heading,
-        speed: trip.speed,
+        latitude: trip.gps.latitude,
+        longitude: trip.gps.longitude,
+        heading: trip.gps.heading,
+        speed: trip.gps.speed,
         routeProgress: trip.routeProgress,
-        gpsAccuracy: trip.gpsAccuracy,
-        lastUpdated: trip.lastUpdated,
+        gpsAccuracy: trip.gps.gpsAccuracy,
+        lastUpdated: trip.gps.timestamp,
         currentStopId: trip.currentStopId,
         nextStopId: trip.nextStopId,
         eta: trip.eta,
@@ -79,13 +80,13 @@ function createMockTripAdapter(): TripService {
       if (trip.status !== "running" && trip.status !== "boarding") continue;
       const bus = MOCK_BUSES.find((b) => b.id === trip.busId)!;
       const drift = Math.round((Math.random() - 0.5) * 3);
-      trip.occupiedSeats = Math.max(0, Math.min(bus.totalSeats, trip.occupiedSeats + drift));
-      trip.vacantSeats = bus.totalSeats - trip.occupiedSeats;
+      trip.passenger.occupiedSeats = Math.max(0, Math.min(bus.totalSeats, trip.passenger.occupiedSeats + drift));
+      trip.passenger.vacantSeats = bus.totalSeats - trip.passenger.occupiedSeats;
       trip.lastUpdated = new Date().toISOString();
       const patch: SeatUpdate = {
-        occupiedSeats: trip.occupiedSeats,
-        standingPassengers: trip.standingPassengers,
-        vacantSeats: trip.vacantSeats,
+        occupiedSeats: trip.passenger.occupiedSeats,
+        standingPassengers: trip.passenger.standingPassengers,
+        vacantSeats: trip.passenger.vacantSeats,
         lastUpdated: trip.lastUpdated,
       };
       updates.push({ tripId: trip.tripId, patch });
