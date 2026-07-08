@@ -275,6 +275,20 @@ export function BusMap() {
   }, [selectedTrip, selectedRoute]);
   const activeRouteIdSet = activeRouteIds;
 
+  const visibleStopIds = useMemo(() => {
+    const ids = new Set<string>();
+    if (selectedRoute) {
+      for (const s of selectedRoute.stops) ids.add(s.id);
+    }
+    if (focusedRouteId && routesById[focusedRouteId]) {
+      for (const s of routesById[focusedRouteId].stops) ids.add(s.id);
+    }
+    for (const r of activeRoutes) {
+      for (const s of r.stops) ids.add(s.id);
+    }
+    return ids;
+  }, [selectedRoute, focusedRouteId, routesById, activeRoutes]);
+
   const isSatellite = baseLayer === "satellite";
 
   return (
@@ -369,10 +383,17 @@ export function BusMap() {
 
         {/* Stops */}
         {showStops &&
-          Object.values(stopsById).map((s) => {
-            const isActive = activeStopIds.has(s.id);
-            return <StopMarker key={s.id} stop={s} isActive={isActive} />;
-          })}
+          Object.values(stopsById)
+            .filter((s) => {
+              if (visibleStopIds.size > 0) {
+                return visibleStopIds.has(s.id);
+              }
+              return true;
+            })
+            .map((s) => {
+              const isActive = activeStopIds.has(s.id);
+              return <StopMarker key={s.id} stop={s} isActive={isActive} />;
+            })}
 
         {/* Trips (Clustered based on zoom) */}
         <ClusterRenderer

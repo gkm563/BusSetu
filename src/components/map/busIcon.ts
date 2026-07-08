@@ -33,10 +33,8 @@ export function busDivIcon(opts: {
   const opacity = opts.dimmed ? 0.35 : 1;
 
   const ringHtml = opts.selected
-    ? `<span style="position:absolute;inset:-8px;border-radius:9999px;background:${c};opacity:.28;animation:pulse-ring 1.6s ease-out infinite;"></span>`
-    : opts.pulse
-      ? `<span style="position:absolute;inset:-4px;border-radius:9999px;background:${c};opacity:.18;animation:pulse-ring 2.4s ease-out infinite;"></span>`
-      : "";
+    ? `<span data-bus-ring style="position:absolute;inset:-8px;border-radius:9999px;background:${c};opacity:.28;animation:pulse-ring 1.6s ease-out infinite;"></span>`
+    : `<span data-bus-ring style="position:absolute;inset:-4px;border-radius:9999px;background:${c};opacity:.18;animation:pulse-ring 2.4s ease-out infinite;${opts.pulse ? "" : "display:none;"}"></span>`;
 
   // Get a readable short format, e.g. "CP 2304" from "UP 65 CP 2304"
   const parts = opts.busNumber.split(" ");
@@ -106,8 +104,13 @@ export function busDivIcon(opts: {
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
         white-space: nowrap;
         pointer-events: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1px;
       ">
-        ${shortNum}
+        <span>${shortNum}</span>
+        <span data-bus-relation style="font-size: 6.5px; padding: 0.5px 3.5px; border-radius: 2px; font-weight: 900; text-transform: uppercase; color: white; display: none;"></span>
       </div>
     </div>
   `;

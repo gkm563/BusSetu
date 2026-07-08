@@ -79,7 +79,7 @@ export function NearbyBusesPanel() {
   const isDenied = status === "denied" || status === "error";
 
   return (
-    <div className="glass-panel pointer-events-auto flex w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl shadow-xl">
+    <div className="glass-panel pointer-events-auto flex max-h-[calc(100vh-8rem)] w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl shadow-xl">
       <button
         onClick={() => setCollapsed((v) => !v)}
         className="flex items-center justify-between gap-2 border-b border-border/60 p-3.5 text-left"
@@ -456,7 +456,7 @@ function BucketedList({
   return (
     <ul
       ref={listRef}
-      className="max-h-[48vh] space-y-3 overflow-y-auto p-2.5"
+      className="max-h-[70vh] space-y-3 overflow-y-auto p-2.5"
       aria-label="Nearby buses grouped by arrival"
     >
       {buckets

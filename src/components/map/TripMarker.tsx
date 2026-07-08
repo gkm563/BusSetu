@@ -5,6 +5,8 @@ import { useLiveStore } from "@/store/useLiveStore";
 import { useUiStore } from "@/store/useUiStore";
 import { busDivIcon } from "./busIcon";
 import { occupancyLevel } from "@/utils/occupancy";
+import { useGeolocation } from "@/hooks/useGeolocation";
+import { haversineKm, bearingDeg } from "@/utils/geo";
 
 function getCoordinateAtProgress(polyline: [number, number][], progress: number): [number, number] | null {
   if (polyline.length === 0) return null;
@@ -39,6 +41,7 @@ export function TripMarker({ tripId, nearby, activeRouteIds }: Props) {
   const selectTrip = useUiStore((s) => s.selectTrip);
   const hoverTrip = useUiStore((s) => s.hoverTrip);
   const replayOffset = useUiStore((s) => s.replayOffset);
+  const { location: userLocation } = useGeolocation();
 
   const isSelected = selectedTripId === tripId;
   const isHovered = hoveredTripId === tripId;
@@ -106,6 +109,83 @@ export function TripMarker({ tripId, nearby, activeRouteIds }: Props) {
     const rotor = el.querySelector<HTMLElement>("[data-bus-rotor]");
     if (rotor) rotor.style.transform = `rotate(${trip.gps.heading}deg)`;
   }, [trip?.gps.heading]);
+
+  // Imperative relation status updates (TOWARDS YOU / PASSED) and glowing ring colors
+  useEffect(() => {
+    if (!trip) return;
+    const el = markerRef.current?.getElement();
+    if (!el) return;
+    
+    const relEl = el.querySelector<HTMLElement>("[data-bus-relation]");
+    const ringEl = el.querySelector<HTMLElement>("[data-bus-ring]");
+    
+    if (!userLocation) {
+      if (relEl) relEl.style.display = "none";
+      return;
+    }
+    
+    const distanceKm = haversineKm(userLocation.lat, userLocation.lng, trip.gps.latitude, trip.gps.longitude);
+    const bearingFromUser = bearingDeg(userLocation.lat, userLocation.lng, trip.gps.latitude, trip.gps.longitude);
+    const angleDiff = Math.abs(((trip.gps.heading - bearingFromUser + 540) % 360) - 180);
+    
+    let relation: "coming" | "away" | "crossed" | "boarding" | "completed" = "away";
+    if (trip.status === "completed") relation = "completed";
+    else if (trip.status === "boarding") relation = "boarding";
+    else if (angleDiff > 120) relation = "coming";
+    else if (angleDiff < 60) {
+      relation = distanceKm < 0.4 ? "crossed" : "away";
+    }
+    
+    let label = "";
+    let bg = "";
+    let ringColor = "";
+    let showRing = isSelected || nearby;
+    
+    switch (relation) {
+      case "coming":
+        bg = "rgba(16, 185, 129, 0.95)"; // emerald green
+        label = `TOWARDS YOU (${distanceKm.toFixed(1)} km)`;
+        ringColor = "#10B981";
+        showRing = true; // Always show green glowing ring when coming towards you!
+        break;
+      case "away":
+        bg = "rgba(245, 158, 11, 0.95)"; // amber orange
+        label = `AWAY (${distanceKm.toFixed(1)} km)`;
+        ringColor = "#F59E0B";
+        break;
+      case "crossed":
+        bg = "rgba(100, 116, 139, 0.95)"; // slate
+        label = "PASSED";
+        ringColor = "#64748B";
+        break;
+      case "boarding":
+        bg = "rgba(59, 130, 246, 0.95)"; // blue
+        label = "BOARDING";
+        ringColor = "#3B82F6";
+        showRing = true;
+        break;
+      case "completed":
+        bg = "rgba(148, 163, 184, 0.95)"; // light slate
+        label = "COMPLETED";
+        ringColor = "#94A3B8";
+        break;
+    }
+    
+    if (relEl) {
+      relEl.textContent = label;
+      relEl.style.backgroundColor = bg;
+      relEl.style.display = "inline-block";
+    }
+    
+    if (ringEl) {
+      if (showRing) {
+        ringEl.style.backgroundColor = ringColor || "var(--color-brand)";
+        ringEl.style.display = "block";
+      } else {
+        ringEl.style.display = "none";
+      }
+    }
+  }, [trip?.gps.latitude, trip?.gps.longitude, trip?.gps.heading, trip?.status, userLocation, isSelected, nearby]);
 
   const position = useMemo((): [number, number] => {
     if (!trip) return [0, 0];

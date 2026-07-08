@@ -1,6 +1,7 @@
-import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { createFileRoute, useSearch, Link } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
+import { ArrowLeft } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { BusMapClient } from "@/components/map/BusMapClient";
 import { RouteSearchPanel } from "@/components/panels/RouteSearchPanel";
@@ -96,15 +97,26 @@ function SearchPage() {
     <div className="relative h-screen w-screen overflow-hidden bg-background">
       <BusMapClient />
 
+        {/* Top-left Back button to home */}
+        <div className="absolute left-4 top-4 z-[550]">
+          <Link
+            to="/"
+            className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-border/60 bg-background/90 px-3.5 py-2 text-xs font-bold text-foreground shadow-md backdrop-blur-md transition-all hover:bg-accent hover:text-foreground hover:scale-105 active:scale-95"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back</span>
+          </Link>
+        </div>
+
         {/* Top overlay: route search */}
         <div className="pointer-events-none absolute inset-x-0 top-4 z-[550] flex flex-col items-center gap-3 px-4">
           <RouteSearchPanel />
         </div>
 
-        {/* Bottom-left panel: either route intelligence results, or the
+        {/* Left panel: either route intelligence results, or the
          *  radius-based Smart Discovery. One at a time so the UI stays
          *  focused on a single question. */}
-        <div className="pointer-events-none absolute inset-x-4 bottom-4 z-[550] flex justify-center md:inset-x-auto md:left-4 md:justify-start">
+        <div className="pointer-events-none absolute inset-x-4 bottom-4 md:bottom-auto md:top-28 md:left-4 md:right-auto md:inset-x-auto z-[550] flex justify-center md:justify-start">
           {routeQueryActive ? <RouteResultsPanel /> : <NearbyBusesPanel />}
         </div>
 
