@@ -124,8 +124,8 @@ export function TripMarker({ tripId, nearby, activeRouteIds }: Props) {
       return;
     }
     
-    const distanceKm = haversineKm(userLocation.lat, userLocation.lng, trip.gps.latitude, trip.gps.longitude);
-    const bearingFromUser = bearingDeg(userLocation.lat, userLocation.lng, trip.gps.latitude, trip.gps.longitude);
+    const distanceKm = haversineKm(userLocation, { lat: trip.gps.latitude, lng: trip.gps.longitude });
+    const bearingFromUser = bearingDeg(userLocation, { lat: trip.gps.latitude, lng: trip.gps.longitude });
     const angleDiff = Math.abs(((trip.gps.heading - bearingFromUser + 540) % 360) - 180);
     
     let relation: "coming" | "away" | "crossed" | "boarding" | "completed" = "away";

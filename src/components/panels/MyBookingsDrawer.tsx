@@ -107,19 +107,60 @@ function TicketCard({ t, trip, route, liveEtaText, currentStopName, speed }: any
     if (!ticketRef.current) return;
     setIsDownloading(true);
     try {
-      const canvas = await html2canvas(ticketRef.current, { scale: 3, useCORS: true, backgroundColor: null });
+      const node = ticketRef.current;
+      const rect = node.getBoundingClientRect();
+
+      const clone = node.cloneNode(true) as HTMLElement;
+
+      // Strip all CSS classes so Tailwind v4 oklch() vars don't break html2canvas
+      clone.removeAttribute("class");
+      clone.querySelectorAll("[class]").forEach((el) => el.removeAttribute("class"));
+
+      clone.style.position = "fixed";
+      clone.style.top = "-9999px";
+      clone.style.left = "-9999px";
+      clone.style.width = rect.width + "px";
+      clone.style.zIndex = "-1";
+      clone.style.pointerEvents = "none";
+      document.body.appendChild(clone);
+
+      let canvas;
+      try {
+        canvas = await html2canvas(clone, {
+          scale: 3,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: "#ffffff",
+          logging: false,
+          width: rect.width,
+          height: clone.scrollHeight,
+          windowWidth: rect.width,
+          onclone: (clonedDoc, clonedEl) => {
+            // Strip all stylesheets so html2canvas never parses oklch() from Tailwind v4
+            clonedDoc.querySelectorAll('link[rel="stylesheet"], style').forEach((s) => s.remove());
+            clonedEl.removeAttribute("class");
+            clonedEl.querySelectorAll("[class]").forEach((el) => el.removeAttribute("class"));
+            const reset = clonedDoc.createElement("style");
+            reset.textContent = "*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }";
+            clonedDoc.head.appendChild(reset);
+          },
+        });
+      } finally {
+        document.body.removeChild(clone);
+      }
+
       const imgData = canvas.toDataURL("image/png");
-      
       const link = document.createElement("a");
       link.href = imgData;
-      const safePassengerName = t.passengerName.replace(/[^a-zA-Z0-9]/g, "_") || "Passenger";
-      const safeBusNumber = t.busNumber.replace(/[^a-zA-Z0-9]/g, "_") || "Bus";
+      const safePassengerName = (t.passengerName || "Passenger").replace(/[^a-zA-Z0-9]/g, "_");
+      const safeBusNumber = (t.busNumber || "Bus").replace(/[^a-zA-Z0-9]/g, "_");
       link.download = `BusSetu_Ticket_${safePassengerName}_${safeBusNumber}.png`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     } catch (err) {
-      console.error(err);
+      console.error("Download error:", err);
+      alert("Download failed: " + String(err));
     } finally {
       setIsDownloading(false);
     }

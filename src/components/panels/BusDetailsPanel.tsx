@@ -39,13 +39,184 @@ import { useLiveBus } from "@/hooks/useLiveBus";
 import { useLiveStore } from "@/store/useLiveStore";
 import type { LiveBusView } from "@/types/view";
 import type { BusAmenity } from "@/types/bus";
-import { occupancyLabel, occupancyRatio } from "@/utils/occupancy";
+import { occupancyRatio } from "@/utils/occupancy";
 import { formatEta, formatKm, formatRelative } from "@/utils/format";
 import { CatchThisBusCard, CatchThisBusModal } from "./CatchThisBusCard";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { CatchService } from "@/services/discovery/CatchService";
 import { haversineKm } from "@/utils/geo";
 const FAV_KEY = "bussetu.favoriteTrips";
+
+const PANEL_T = {
+  en: {
+    liveTracking: "LIVE TRACKING",
+    onTime: "On Time",
+    delayed: "Delayed",
+    nextStopEta: "Next Stop ETA",
+    toReach: "to reach",
+    awayFromYou: "away from your location",
+    currentStop: "Current Stop",
+    passed: "Passed",
+    nextStop: "Next Stop",
+    seatsOccupancy: "Seats & occupancy",
+    plentySeats: "Plenty of seats",
+    moderateCrowd: "Moderate crowd",
+    veryCrowded: "Very crowded",
+    standingOnly: "Standing room only",
+    plentySeatsBadge: "Plenty Seats",
+    moderateCrowdBadge: "Moderate",
+    crowdedBadge: "Crowded",
+    totalSeats: "Total seats",
+    availableSeats: "Available seats",
+    occupiedSeats: "Occupied seats",
+    womenReserved: "Women reserved",
+    standingPassengers: "Standing passengers",
+    passengersOnboard: "Passengers Onboard",
+    capacity: "capacity",
+    farePricing: "Fare & Pricing",
+    startingFrom: "Starting from",
+    seatInclGst: "seat incl. GST",
+    acBus: "AC Bus",
+    nonAcBus: "Non-AC Bus",
+    acBaseFare: "AC base fare",
+    baseFare: "Base fare",
+    seat: "seat",
+    luggageOptional: "Luggage protection (optional)",
+    luggageFlat: "Luggage protection (flat)",
+    flat: "flat",
+    gst: "GST",
+    onSeatFare: "on seat fare",
+    bookSecure: "Book & secure your seat",
+    speed: "Speed",
+    avg: "Avg",
+    liveAnalytics: "Live analytics",
+    occupancy: "Occupancy",
+    avgDelay: "Avg delay",
+    remaining: "Remaining",
+    liveUpdated: "Live · updated just now",
+    viewAllStops: "View all stops",
+    timeline: "Timeline",
+    origin: "Origin",
+    bus: "Bus",
+    destination: "Destination",
+    inTransit: "In transit",
+    nextStopPlaceholder: "—",
+    acUpgradeOptional: "AC upgrade (optional)",
+    acUpgradeSeat: "AC upgrade (optional)"
+  },
+  hi: {
+    liveTracking: "लाइव ट्रैकिंग",
+    onTime: "समय पर",
+    delayed: "विलंबित",
+    nextStopEta: "अगला स्टॉप ईटीए",
+    toReach: "पहुंचने में",
+    awayFromYou: "आपके स्थान से दूर",
+    currentStop: "वर्तमान स्टॉप",
+    passed: "गुज़र गया",
+    nextStop: "अगला स्टॉप",
+    seatsOccupancy: "सीटें और भीड़",
+    plentySeats: "पर्याप्त सीटें उपलब्ध",
+    moderateCrowd: "मध्यम भीड़",
+    veryCrowded: "अत्यधिक भीड़",
+    standingOnly: "केवल खड़े होने की जगह",
+    plentySeatsBadge: "पर्याप्त सीटें",
+    moderateCrowdBadge: "मध्यम भीड़",
+    crowdedBadge: "भीड़भाड़",
+    totalSeats: "कुल सीटें",
+    availableSeats: "उपलब्ध सीटें",
+    occupiedSeats: "भरी हुई सीटें",
+    womenReserved: "महिला आरक्षित",
+    standingPassengers: "खड़े यात्री",
+    passengersOnboard: "यात्री सवार",
+    capacity: "क्षमता",
+    farePricing: "किराया और मूल्य निर्धारण",
+    startingFrom: "शुरुआती किराया",
+    seatInclGst: "प्रति सीट (जीएसटी सहित)",
+    acBus: "एसी बस",
+    nonAcBus: "नॉन-एसी बस",
+    acBaseFare: "एसी मूल किराया",
+    baseFare: "मूल किराया",
+    seat: "सीट",
+    luggageOptional: "सामान सुरक्षा (वैकल्पिक)",
+    luggageFlat: "सामान सुरक्षा (निश्चित)",
+    flat: "निश्चित",
+    gst: "जीएसटी",
+    onSeatFare: "सीट के किराये पर",
+    bookSecure: "बुक करें और सीट सुरक्षित करें",
+    speed: "गति",
+    avg: "औसत",
+    liveAnalytics: "लाइव विश्लेषण",
+    occupancy: "भीड़ का स्तर",
+    avgDelay: "औसत देरी",
+    remaining: "शेष दूरी",
+    liveUpdated: "लाइव · अभी अपडेट किया गया",
+    viewAllStops: "सभी स्टॉप देखें",
+    timeline: "समयरेखा (Timeline)",
+    origin: "प्रारंभिक स्टॉप",
+    bus: "बस",
+    destination: "गंतव्य स्टॉप",
+    inTransit: "मार्ग में",
+    nextStopPlaceholder: "—",
+    acUpgradeOptional: "एसी अपग्रेड (वैकल्पिक)",
+    acUpgradeSeat: "एसी अपग्रेड (वैकल्पिक)"
+  },
+  th: {
+    liveTracking: "ติดตามสด",
+    onTime: "ตรงเวลา",
+    delayed: "ล่าช้า",
+    nextStopEta: "เวลาถึงป้ายถัดไป",
+    toReach: "เพื่อไปถึง",
+    awayFromYou: "ห่างจากตำแหน่งของคุณ",
+    currentStop: "ป้ายปัจจุบัน",
+    passed: "ผ่านแล้ว",
+    nextStop: "ป้ายถัดไป",
+    seatsOccupancy: "ที่นั่งและความหนาแน่น",
+    plentySeats: "มีที่นั่งว่างจำนวนมาก",
+    moderateCrowd: "ผู้โดยสารปานกลาง",
+    veryCrowded: "ผู้โดยสารหนาแน่นมาก",
+    standingOnly: "มีเฉพาะที่ยืนเท่านั้น",
+    plentySeatsBadge: "ที่นั่งว่างเยอะ",
+    moderateCrowdBadge: "ปานกลาง",
+    crowdedBadge: "หนาแน่น",
+    totalSeats: "ที่นั่งทั้งหมด",
+    availableSeats: "ที่นั่งว่าง",
+    occupiedSeats: "ที่นั่งมีคนจอง",
+    womenReserved: "เฉพาะสตรี",
+    standingPassengers: "ผู้โดยสารยืน",
+    passengersOnboard: "ผู้โดยสารบนรถ",
+    capacity: "ความจุ",
+    farePricing: "ค่าโดยสารและราคา",
+    startingFrom: "เริ่มต้นที่",
+    seatInclGst: "ที่นั่ง รวม GST",
+    acBus: "รถบัส AC",
+    nonAcBus: "รถบัสธรรมดา",
+    acBaseFare: "ค่าโดยสารปกติ AC",
+    baseFare: "ค่าโดยสารปกติ",
+    seat: "ที่นั่ง",
+    luggageOptional: "ประกันกระเป๋า (เลือกได้)",
+    luggageFlat: "ประกันกระเป๋า (ราคาเดียว)",
+    flat: "คงที่",
+    gst: "GST",
+    onSeatFare: "ของราคาตั๋ว",
+    bookSecure: "จองเพื่อล็อกที่นั่งของคุณ",
+    speed: "ความเร็ว",
+    avg: "เฉลี่ย",
+    liveAnalytics: "การวิเคราะห์สด",
+    occupancy: "ความหนาแน่น",
+    avgDelay: "ดีเลย์เฉลี่ย",
+    remaining: "ระยะทางที่เหลือ",
+    liveUpdated: "สด · อัปเดตเมื่อสักครู่",
+    viewAllStops: "ดูป้ายทั้งหมด",
+    timeline: "ไทม์ไลน์",
+    origin: "ต้นทาง",
+    bus: "รถบัส",
+    destination: "ปลายทาง",
+    inTransit: "ระหว่างทาง",
+    nextStopPlaceholder: "—",
+    acUpgradeOptional: "อัพเกรด AC (ทางเลือก)",
+    acUpgradeSeat: "อัพเกรด AC (ทางเลือก)"
+  }
+};
 
 function useFavorite(tripId: string | null) {
   const [set, setSet] = useState<Set<string>>(new Set());
@@ -375,6 +546,7 @@ function IconButton({
  * ============================================================ */
 
 function getHumanOccupancy(trip: LiveBusView["trip"], bus: LiveBusView["bus"]) {
+  const language = useUiStore.getState().language;
   const count = trip.passenger.occupiedSeats;
   const standing = trip.passenger.standingPassengers;
   const vacant = trip.passenger.vacantSeats;
@@ -384,15 +556,39 @@ function getHumanOccupancy(trip: LiveBusView["trip"], bus: LiveBusView["bus"]) {
   else if (ratio >= 0.75) level = "high";
   else if (ratio >= 0.4) level = "medium";
 
-  switch (level) {
-    case "low":
-      return { text: `Plenty Seats (${vacant} Available)`, color: "text-success", bg: "bg-success/10", val: "low" };
-    case "medium":
-      return { text: `Seats Available (${vacant} Left)`, color: "text-warning", bg: "bg-warning/10", val: "medium" };
-    case "high":
-      return { text: `Crowded (${vacant} Left)`, color: "text-warning", bg: "bg-warning/10", val: "high" };
-    default:
-      return { text: `Standing Only (${standing} Standing)`, color: "text-danger", bg: "bg-danger/10", val: "packed" };
+  if (language === "hi") {
+    switch (level) {
+      case "low":
+        return { text: `पर्याप्त सीटें उपलब्ध (${vacant} खाली)`, color: "text-success", bg: "bg-success/10", val: "low" };
+      case "medium":
+        return { text: `सीटें उपलब्ध (${vacant} शेष)`, color: "text-warning", bg: "bg-warning/10", val: "medium" };
+      case "high":
+        return { text: `भीड़भाड़ (${vacant} शेष)`, color: "text-warning", bg: "bg-warning/10", val: "high" };
+      default:
+        return { text: `केवल खड़े होने की जगह (${standing} खड़े)`, color: "text-danger", bg: "bg-danger/10", val: "packed" };
+    }
+  } else if (language === "th") {
+    switch (level) {
+      case "low":
+        return { text: `ที่นั่งว่างเยอะ (${vacant} ที่ว่าง)`, color: "text-success", bg: "bg-success/10", val: "low" };
+      case "medium":
+        return { text: `มีที่นั่งว่าง (${vacant} เหลือ)`, color: "text-warning", bg: "bg-warning/10", val: "medium" };
+      case "high":
+        return { text: `หนาแน่น (${vacant} เหลือ)`, color: "text-warning", bg: "bg-warning/10", val: "high" };
+      default:
+        return { text: `มีเฉพาะที่ยืน (${standing} คนยืน)`, color: "text-danger", bg: "bg-danger/10", val: "packed" };
+    }
+  } else {
+    switch (level) {
+      case "low":
+        return { text: `Plenty Seats (${vacant} Available)`, color: "text-success", bg: "bg-success/10", val: "low" };
+      case "medium":
+        return { text: `Seats Available (${vacant} Left)`, color: "text-warning", bg: "bg-warning/10", val: "medium" };
+      case "high":
+        return { text: `Crowded (${vacant} Left)`, color: "text-warning", bg: "bg-warning/10", val: "high" };
+      default:
+        return { text: `Standing Only (${standing} Standing)`, color: "text-danger", bg: "bg-danger/10", val: "packed" };
+    }
   }
 }
 
@@ -407,7 +603,10 @@ function EtaDelayBanner({
   nextStopEta?: string;
   distanceToUserKm: number | null;
 }) {
+  const language = useUiStore((s) => s.language);
+  const t = PANEL_T[language] || PANEL_T.en;
   const isDelayed = typeof trip.delay === "number" && trip.delay > 0;
+  
   return (
     <div className="flex flex-col gap-3.5 rounded-3xl border border-indigo-100/80 bg-gradient-to-br from-indigo-50/50 via-white to-indigo-50/20 p-5 shadow-md shadow-indigo-100/10">
       <div className="flex items-center justify-between">
@@ -417,36 +616,36 @@ function EtaDelayBanner({
             <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
           </span>
           <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
-            LIVE TRACKING
+            {t.liveTracking}
           </span>
         </div>
         {isDelayed ? (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 border border-amber-200 px-3 py-1 text-xs font-black text-amber-700 font-mono shadow-sm">
-            Delayed {trip.delay} min
+            {language === "hi" ? `विलंबित ${trip.delay} मिनट` : language === "th" ? `ล่าช้า ${trip.delay} นาที` : `Delayed ${trip.delay} min`}
           </span>
         ) : (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 border border-emerald-200 px-3 py-1 text-xs font-black text-emerald-700 font-mono shadow-sm">
-            On Time
+            {t.onTime}
           </span>
         )}
       </div>
       <div className="flex flex-col gap-1 mt-1">
         <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">
-          Next Stop ETA
+          {t.nextStopEta}
         </span>
         <div className="flex items-baseline gap-2">
           <span className="text-4xl font-black font-display text-transparent bg-clip-text bg-gradient-to-r from-brand to-indigo-600 tracking-tight">
             {nextStopEta ? formatEta(nextStopEta) : "—"}
           </span>
           <span className="text-sm text-slate-600 font-extrabold truncate">
-            to reach <span className="text-slate-800 font-black">{nextStopName ?? "next stop"}</span>
+            {t.toReach} <span className="text-slate-800 font-black">{nextStopName ?? (language === "hi" ? "अगला स्टॉप" : language === "th" ? "ป้ายถัดไป" : "next stop")}</span>
           </span>
         </div>
       </div>
       {distanceToUserKm !== null && (
         <div className="mt-1 text-xs font-extrabold text-violet-700 bg-violet-50 border border-violet-100/80 rounded-xl px-3.5 py-2 inline-flex items-center gap-2 w-fit shadow-sm">
           <span className="text-base leading-none">🚌</span>
-          <span>{distanceToUserKm.toFixed(2)} km away from your location</span>
+          <span>{distanceToUserKm.toFixed(2)} km {t.awayFromYou}</span>
         </div>
       )}
     </div>
@@ -462,29 +661,32 @@ function StopsDetailsCard({
   nextStopName?: string;
   nextStopEta?: string;
 }) {
+  const language = useUiStore((s) => s.language);
+  const t = PANEL_T[language] || PANEL_T.en;
+
   return (
     <div className="grid grid-cols-2 gap-3.5">
       <div className="rounded-2xl border border-slate-200/80 bg-slate-50/50 p-4 flex flex-col justify-between min-w-0 shadow-sm">
         <div>
           <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block">
-            Current Stop
+            {t.currentStop}
           </span>
           <span className="font-display font-extrabold text-[13px] text-slate-700 block mt-1.5 truncate">
-            {currentStopName ?? "In transit"}
+            {currentStopName ?? t.inTransit}
           </span>
         </div>
         <span className="text-[10px] text-slate-400 mt-3.5 block font-bold flex items-center gap-1">
-          🏁 Passed
+          🏁 {t.passed}
         </span>
       </div>
 
       <div className="rounded-2xl border border-brand/35 bg-brand/5 p-4 flex flex-col justify-between min-w-0 shadow-sm shadow-brand/5">
         <div>
           <span className="text-[9px] font-black uppercase tracking-widest text-brand block">
-            Next Stop
+            {t.nextStop}
           </span>
           <span className="font-display font-black text-[13px] text-brand block mt-1.5 truncate">
-            {nextStopName ?? "—"}
+            {nextStopName ?? t.nextStopPlaceholder}
           </span>
         </div>
         <span className="text-[10px] text-brand mt-3.5 block font-extrabold font-mono flex items-center gap-1">
@@ -504,11 +706,14 @@ function TelemetryCard({ trip }: { trip: LiveBusView["trip"] }) {
 }
 
 function SpeedTile({ speed }: { speed: number }) {
+  const language = useUiStore((s) => s.language);
+  const t = PANEL_T[language] || PANEL_T.en;
+
   return (
     <div className="flex items-center justify-between rounded-2xl border border-rose-100 bg-rose-50/50 px-4 py-3 shadow-sm hover:scale-[1.01] transition-transform">
       <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-rose-500">
         <Gauge className="h-4 w-4" strokeWidth={2.5} />
-        Speed
+        {t.speed}
       </div>
       <div className="flex items-baseline gap-1">
         <span className="font-display text-2xl font-black text-rose-600 leading-none">{Math.round(speed)}</span>
@@ -667,6 +872,9 @@ function formatTimeOnly(iso?: string) {
 
 function SeatInformationCard({ view }: { view: LiveBusView }) {
   const { trip, bus } = view;
+  const language = useUiStore((s) => s.language);
+  const t = PANEL_T[language] || PANEL_T.en;
+
   const occInfo = getHumanOccupancy(trip, bus);
   const ratio = Math.min(1, (trip.passenger.occupiedSeats + trip.passenger.standingPassengers) / bus.totalSeats);
   const pct = Math.round(ratio * 100);
@@ -683,14 +891,20 @@ function SeatInformationCard({ view }: { view: LiveBusView }) {
 
   return (
     <section aria-label="Seat information" className="space-y-2">
-      <SectionLabel icon={Users}>Seats & occupancy</SectionLabel>
+      <SectionLabel icon={Users}>{t.seatsOccupancy}</SectionLabel>
       <div className="rounded-3xl border border-slate-200/80 bg-white p-4.5 shadow-sm">
         <div className="flex items-center gap-5">
           <CircularProgress
             value={pct}
             color={colorVar}
             centerLabel={`${pct}%`}
-            sublabel={occupancyLabel(occInfo.val as any)}
+            sublabel={
+              occInfo.val === "low" 
+                ? t.plentySeatsBadge 
+                : occInfo.val === "medium" 
+                  ? t.moderateCrowdBadge 
+                  : t.crowdedBadge
+            }
           />
           <div className="min-w-0 flex-1 space-y-2">
             <div className={`text-[10px] font-black uppercase tracking-wider rounded-lg px-2.5 py-0.5 inline-block border ${occInfo.bg} ${occInfo.color} ${
@@ -699,25 +913,25 @@ function SeatInformationCard({ view }: { view: LiveBusView }) {
               {occInfo.text}
             </div>
             <div className="space-y-1">
-              <SeatRow icon={Circle} label="Total seats" value={bus.totalSeats} />
-              <SeatRow icon={CircleCheck} label="Available seats" value={trip.passenger.vacantSeats} tone="success" />
-              <SeatRow icon={Users} label="Occupied seats" value={trip.passenger.occupiedSeats} />
+              <SeatRow icon={Circle} label={t.totalSeats} value={bus.totalSeats} />
+              <SeatRow icon={CircleCheck} label={t.availableSeats} value={trip.passenger.vacantSeats} tone="success" />
+              <SeatRow icon={Users} label={t.occupiedSeats} value={trip.passenger.occupiedSeats} />
               {trip.passenger.standingPassengers > 0 && (
                 <SeatRow
                   icon={Footprints}
-                  label="Standing passengers"
+                  label={t.standingPassengers}
                   value={trip.passenger.standingPassengers}
                   tone="warning"
                 />
               )}
               {women > 0 && (
-                <SeatRow icon={Sparkles} label="Women reserved" value={women} tone="brand" />
+                <SeatRow icon={Sparkles} label={t.womenReserved} value={women} tone="brand" />
               )}
             </div>
           </div>
         </div>
         <div className="mt-3.5 border-t border-slate-100 pt-3 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-          {totalOnboard} Passengers Onboard · capacity {bus.totalSeats + (bus.standingCapacity ?? 0)}
+          {totalOnboard} {t.passengersOnboard} · {t.capacity} {bus.totalSeats + (bus.standingCapacity ?? 0)}
         </div>
       </div>
     </section>

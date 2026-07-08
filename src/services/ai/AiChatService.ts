@@ -47,8 +47,9 @@ Stops Catalog: ${JSON.stringify(stops)}
 Instructions:
 - Provide accurate recommendations based on live seats counts, speed metrics, delay counts, and coordinates.
 - If the user asks about travel times or walking durations, calculate walking ETAs assuming average walking speed is 4.8 km/h.
-- Be concise (2-4 sentences max per response). Keep it friendly and conversational.
-- CRITICAL: You MUST reply entirely in ${langName}. If the user language is Hindi, reply in fluent Hindi (Devanagari script). If it is Thai, reply in Thai script. Do NOT use English unless the selected language is English.
+- Be helpful, conversational, and highly informative. Feel free to use list bullet formatting, speed comparisons, and recommendations.
+- CRITICAL: Whenever you mention a bus (e.g. by bus number like "UP70 AB 1234"), you MUST format it as a markdown link with its tripId, in the format: [Bus Number](#bus-tripId). For example, write "[UP70 AB 1234](#bus-TRIP-102)" instead of just the bus number. This is extremely important so the user can click it to open details.
+- CRITICAL: You MUST reply entirely in the same language as user prompt. Currently requested response language is: ${langName}. If the user language is Hindi (including Devanagari script), reply in fluent Hindi. If it is Thai, reply in Thai script. Do NOT use English unless the selected language or input query is in English.
 `;
   },
 
@@ -59,7 +60,19 @@ Instructions:
         "API Key is missing! If you are testing locally, please restart your Vite dev server so it can read the .env.local file. If you are on Vercel, please ensure VITE_GEMINI_API_KEY is set in your environment variables and trigger a new deployment."
       );
     }
-    const context = this.getSystemContext(userLocation, languageCode);
+
+    // Auto-detect prompt language from characters to dynamic matching
+    let detectedLang = languageCode;
+    if (/[\u0900-\u097F]/.test(prompt)) {
+      detectedLang = "hi";
+    } else if (/[\u0e00-\u0e7f]/.test(prompt)) {
+      detectedLang = "th";
+    } else if (/[a-zA-Z]/.test(prompt)) {
+      // If there are English characters, default response language to English
+      detectedLang = "en";
+    }
+
+    const context = this.getSystemContext(userLocation, detectedLang);
 
     // Format history for Gemini API
     const contents = [

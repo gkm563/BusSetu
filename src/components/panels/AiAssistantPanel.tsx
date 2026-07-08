@@ -1,24 +1,66 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bot, User, X, Loader2, Sparkles, Send } from "lucide-react";
+import { User, X, Loader2, Send } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { AiChatService, type ChatMessage } from "@/services/ai/AiChatService";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useUiStore } from "@/store/useUiStore";
+
+const AI_PANEL_LANG = {
+  en: {
+    greeting: "Hello! I am BusSetu AI. Ask me anything about current live buses, route speeds, seat availability, or walking ETAs on Prayagraj highways!",
+    tryAsking: "Try asking",
+    suggestions: [
+      "Recommend fastest bus",
+      "Show buses with most vacant seats",
+      "Where is the nearest stop?",
+      "Will I miss my bus if I walk?",
+    ]
+  },
+  hi: {
+    greeting: "नमस्ते! मैं बससेतु एआई हूँ। मुझसे प्रयागराज राजमार्गों पर वर्तमान लाइव बसों, मार्ग की गति, सीटों की उपलब्धता या पैदल चलने के ईटीए के बारे में कुछ भी पूछें!",
+    tryAsking: "पूछने का प्रयास करें",
+    suggestions: [
+      "सबसे तेज़ बस की सिफ़ारिश करें",
+      "सबसे अधिक खाली सीटों वाली बसें दिखाएं",
+      "निकटतम स्टॉप कहाँ है?",
+      "यदि मैं पैदल चलूँ तो क्या मेरी बस छूट जाएगी?",
+    ]
+  },
+  th: {
+    greeting: "สวัสดีครับ! ผมคือ BusSetu AI ถามผมได้ทุกเรื่องเกี่ยวกับรถบัสไลฟ์สด ความเร็วเส้นทาง ที่นั่งว่าง หรือระยะเวลาเดินเท้าบนทางหลวงประยาราช!",
+    tryAsking: "ลองถามดู",
+    suggestions: [
+      "แนะนำรถบัสที่เร็วที่สุด",
+      "แสดงรถบัสที่มีที่นั่งว่างมากที่สุด",
+      "จุดจอดที่ใกล้ที่สุดอยู่ที่ไหน?",
+      "ถ้าฉันเดินไปจะตกรถบัสไหม?",
+    ]
+  }
+};
 
 export function AiAssistantPanel() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      role: "model",
-      text: "Namaste! I am BusSetu AI. Ask me anything about current live buses, route speeds, seat availability, or walking ETAs on Prayagraj highways!",
-    },
-  ]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
   const { location } = useGeolocation();
   const { language, setLanguage } = useTranslation();
+  
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const selectTrip = useUiStore((s) => s.selectTrip);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Initialize and synchronize initial greeting language
+  useEffect(() => {
+    setMessages((prev) => {
+      const activeGreeting = AI_PANEL_LANG[language]?.greeting || AI_PANEL_LANG.en.greeting;
+      if (prev.length <= 1) {
+        return [{ role: "model", text: activeGreeting }];
+      }
+      return prev;
+    });
+  }, [language]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -31,6 +73,19 @@ export function AiAssistantPanel() {
   const handleSend = async (textToSend?: string) => {
     const prompt = textToSend ?? input;
     if (!prompt.trim() || loading) return;
+
+    // Dynamically auto-detect language from input and synchronize UI language state
+    let detectedLang = language;
+    if (/[\u0900-\u097F]/.test(prompt)) {
+      detectedLang = "hi";
+    } else if (/[\u0e00-\u0e7f]/.test(prompt)) {
+      detectedLang = "th";
+    } else if (/[a-zA-Z]/.test(prompt)) {
+      detectedLang = "en";
+    }
+    if (detectedLang !== language) {
+      setLanguage(detectedLang);
+    }
 
     if (!textToSend) setInput("");
     setMessages((prev) => [...prev, { role: "user", text: prompt }]);
@@ -58,15 +113,34 @@ export function AiAssistantPanel() {
     }
   };
 
-  const suggestions = [
-    "Recommend fastest bus",
-    "Show buses with most vacant seats",
-    "Where is the nearest stop?",
-    "Will I miss my bus if I walk?",
-  ];
 
   return (
     <>
+      {/* Floating Language Selection Pill next to robot icon */}
+      <div className="fixed top-4 right-[76px] z-[999] flex h-14 items-center gap-1.5 rounded-full border border-border bg-card/90 backdrop-blur-md px-3.5 shadow-xl hover:shadow-2xl transition-all duration-300">
+        {[
+          { code: "en", label: "🇺🇸 EN" },
+          { code: "hi", label: "🇮🇳 हिंदी" },
+          { code: "th", label: "🇹🇭 ไทย" }
+        ].map((lang) => {
+          const isActive = language === lang.code;
+          return (
+            <button
+              key={lang.code}
+              type="button"
+              onClick={() => setLanguage(lang.code as any)}
+              className={`rounded-full px-2.5 py-1.5 text-[10px] font-black transition-all cursor-pointer ${
+                isActive
+                  ? "bg-brand text-brand-foreground shadow-sm shadow-brand/20 scale-105"
+                  : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+              }`}
+            >
+              {lang.label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Floating Toggle Button */}
       <button
         onClick={() => setIsOpen(true)}
@@ -149,7 +223,33 @@ export function AiAssistantPanel() {
                       }`}
                     >
                       {isModel ? (
-                        <ReactMarkdown>{m.text}</ReactMarkdown>
+                        <ReactMarkdown
+                          components={{
+                            a: ({ href, children }) => {
+                              if (href?.startsWith("#bus-")) {
+                                const tripId = href.replace("#bus-", "");
+                                return (
+                                  <button
+                                    onClick={() => {
+                                      selectTrip(tripId);
+                                      setIsOpen(false); // Close AI panel so they see details panel immediately
+                                    }}
+                                    className="text-brand font-black underline hover:text-brand/80 cursor-pointer inline-flex items-center gap-0.5 bg-brand/5 border border-brand/20 px-1.5 py-0.5 rounded-md hover:scale-[1.02] active:scale-[0.98] transition-transform"
+                                  >
+                                    🚌 {children}
+                                  </button>
+                                );
+                              }
+                              return (
+                                <a href={href} target="_blank" rel="noreferrer" className="text-brand underline">
+                                  {children}
+                                </a>
+                              );
+                            },
+                          }}
+                        >
+                          {m.text}
+                        </ReactMarkdown>
                       ) : (
                         m.text
                       )}
@@ -181,10 +281,10 @@ export function AiAssistantPanel() {
             {messages.length === 1 && !loading && (
               <div className="px-4 py-2 border-t border-border/40">
                 <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Try asking
+                  {AI_PANEL_LANG[language]?.tryAsking || AI_PANEL_LANG.en.tryAsking}
                 </span>
                 <div className="mt-1 flex flex-wrap gap-1.5">
-                  {suggestions.map((s, i) => (
+                  {(AI_PANEL_LANG[language]?.suggestions || AI_PANEL_LANG.en.suggestions).map((s, i) => (
                     <button
                       key={i}
                       onClick={() => handleSend(s)}

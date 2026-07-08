@@ -29,12 +29,12 @@ export function busDivIcon(opts: {
   dimmed?: boolean;
 }) {
   const c = color(opts.level, opts.kind);
-  const size = opts.selected ? 36 : opts.hovered ? 34 : 30;
-  const opacity = opts.dimmed ? 0.35 : 1;
+  const size = opts.selected ? 44 : opts.hovered ? 40 : 36;
+  const opacity = opts.dimmed ? 0.58 : 1;
 
   const ringHtml = opts.selected
-    ? `<span data-bus-ring style="position:absolute;inset:-8px;border-radius:9999px;background:${c};opacity:.28;animation:pulse-ring 1.6s ease-out infinite;"></span>`
-    : `<span data-bus-ring style="position:absolute;inset:-4px;border-radius:9999px;background:${c};opacity:.18;animation:pulse-ring 2.4s ease-out infinite;${opts.pulse ? "" : "display:none;"}"></span>`;
+    ? `<span data-bus-ring style="position:absolute;inset:-8px;border-radius:9999px;background:${c};opacity:.35;animation:pulse-ring 1.6s ease-out infinite;"></span>`
+    : `<span data-bus-ring style="position:absolute;inset:-4px;border-radius:9999px;background:${c};opacity:.25;animation:pulse-ring 2.4s ease-out infinite;${opts.pulse ? "" : "display:none;"}"></span>`;
 
   // Get a readable short format, e.g. "CP 2304" from "UP 65 CP 2304"
   const parts = opts.busNumber.split(" ");
@@ -47,10 +47,10 @@ export function busDivIcon(opts: {
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      width: 70px;
-      height: 70px;
-      margin-left: -20px;
-      margin-top: -20px;
+      width: 80px;
+      height: 80px;
+      margin-left: -22px;
+      margin-top: -22px;
       opacity: ${opacity};
     ">
       <!-- Rotatable Bus Icon Container -->
@@ -67,8 +67,11 @@ export function busDivIcon(opts: {
           <rect x="1" y="8" width="2" height="5" rx="1.2" fill="${c}" stroke="white" stroke-width="0.8" />
           <rect x="29" y="8" width="2" height="5" rx="1.2" fill="${c}" stroke="white" stroke-width="0.8" />
           
+          <!-- Outer border for high contrast against map background -->
+          <rect x="3" y="1" width="26" height="34" rx="6" fill="none" stroke="rgba(15, 23, 42, 0.45)" stroke-width="1.2" />
+          
           <!-- Bus body -->
-          <rect x="4" y="2" width="24" height="32" rx="5" fill="${c}" stroke="white" stroke-width="2" />
+          <rect x="4" y="2" width="24" height="32" rx="5" fill="${c}" stroke="white" stroke-width="1.8" />
           
           <!-- Windshield (Blue screen) -->
           <rect x="7" y="5" width="18" height="6" rx="1.5" fill="#38BDF8" stroke="white" stroke-width="0.8" />
@@ -92,15 +95,15 @@ export function busDivIcon(opts: {
       <!-- Static Horizontal label -->
       <div style="
         margin-top: 3px;
-        background: rgba(15, 23, 42, 0.9);
+        background: rgba(15, 23, 42, 0.95);
         color: white;
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-        font-size: 8px;
+        font-size: 8.5px;
         font-weight: 700;
         letter-spacing: -0.2px;
-        padding: 1.5px 4px;
+        padding: 2px 5px;
         border-radius: 4px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.25);
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
         white-space: nowrap;
         pointer-events: auto;
@@ -118,8 +121,8 @@ export function busDivIcon(opts: {
   return L.divIcon({
     html,
     className: "bus-marker-shadow",
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
   });
 }
 
