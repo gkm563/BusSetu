@@ -132,10 +132,15 @@ export function CatchThisBusCard({ onOpen }: { onOpen: () => void }) {
         {/* Primary Action Button */}
         <button
           onClick={onOpen}
-          className="w-full mt-1.5 flex items-center justify-center gap-2 rounded-xl bg-brand py-3 text-xs font-semibold text-brand-foreground shadow-md shadow-brand/20 transition-transform hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+          disabled={catchStatus === "missed"}
+          className={`w-full mt-1.5 flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-semibold transition-transform ${
+            catchStatus === "missed" 
+              ? "bg-muted text-muted-foreground cursor-not-allowed" 
+              : "bg-brand text-brand-foreground shadow-md shadow-brand/20 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+          }`}
         >
           <Ticket className="h-4 w-4" />
-          Catch This Bus & Book Ticket
+          {catchStatus === "missed" ? "Booking Unavailable (Crossed)" : "Catch This Bus & Book Ticket"}
         </button>
       </div>
 

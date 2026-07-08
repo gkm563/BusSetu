@@ -42,7 +42,8 @@ import type { BusAmenity } from "@/types/bus";
 import { occupancyLabel, occupancyRatio } from "@/utils/occupancy";
 import { formatEta, formatKm, formatRelative } from "@/utils/format";
 import { CatchThisBusCard, CatchThisBusModal } from "./CatchThisBusCard";
-
+import { useGeolocation } from "@/hooks/useGeolocation";
+import { CatchService } from "@/services/discovery/CatchService";
 const FAV_KEY = "bussetu.favoriteTrips";
 
 function useFavorite(tripId: string | null) {
@@ -155,6 +156,15 @@ function PanelBody({
     [speedHistory, trip.gps.speed],
   );
 
+  const { location } = useGeolocation();
+  const assessment = useMemo(
+    () => (view && location ? CatchService.assess({ view, user: location }) : null),
+    [view, location],
+  );
+  // If no location (e.g. permission denied) we assume bookable.
+  // Otherwise if slackSec < -90, the bus has passed the nearest stop.
+  const isBookable = !assessment || assessment.slackSec >= -90;
+
   return (
     <>
       <StickyHeader view={view} onClose={onClose} fav={fav} />
@@ -213,6 +223,7 @@ function PanelBody({
         onCatchNearby={onOpenTimeline}
         onShare={() => shareTrip(view)}
         onBook={() => setBookingOpen(true)}
+        bookable={isBookable}
       />
 
       <CatchThisBusModal isOpen={bookingOpen} onClose={() => setBookingOpen(false)} />
@@ -1106,12 +1117,14 @@ function ActionsBar({
   onCatchNearby,
   onShare,
   onBook,
+  bookable = true,
 }: {
   routeFocused: boolean;
   onTrackRoute: () => void;
   onCatchNearby: () => void;
   onShare: () => void;
   onBook: () => void;
+  bookable?: boolean;
 }) {
   return (
     <div className="sticky bottom-0 z-10 border-t border-border/60 bg-card/85 p-3 backdrop-blur-xl">
@@ -1147,10 +1160,15 @@ function ActionsBar({
         <button
           type="button"
           onClick={onBook}
-          className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-success px-3 py-2 text-xs font-semibold text-success-foreground hover:bg-success/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-success focus-visible:ring-offset-2 focus-visible:ring-offset-card cursor-pointer"
+          disabled={!bookable}
+          className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-success focus-visible:ring-offset-2 focus-visible:ring-offset-card ${
+            bookable
+              ? "bg-success text-success-foreground hover:bg-success/90 hover:scale-[1.02] cursor-pointer shadow-sm"
+              : "bg-muted text-muted-foreground cursor-not-allowed opacity-80"
+          }`}
         >
           <Ticket className="h-3.5 w-3.5" strokeWidth={2.4} />
-          Book Ticket
+          {bookable ? "Book Ticket" : "Crossed"}
         </button>
       </div>
     </div>
