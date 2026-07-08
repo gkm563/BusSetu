@@ -519,7 +519,7 @@ export function CatchThisBusModal({ isOpen, onClose }: { isOpen: boolean; onClos
                   </div>
 
                   {/* Digital Boarding Pass */}
-                  <div ref={ticketRef} className="relative rounded-3xl border border-border bg-card shadow-lg overflow-hidden">
+                  <div ref={ticketRef} className="print-ticket relative rounded-3xl border border-border bg-card shadow-lg overflow-hidden">
                     {/* Ticket header */}
                     <div className="bg-brand p-4 text-brand-foreground flex justify-between items-center">
                       <div className="flex items-center gap-2">
@@ -584,19 +584,25 @@ export function CatchThisBusModal({ isOpen, onClose }: { isOpen: boolean; onClos
 
                   <div className="grid grid-cols-2 gap-3 mt-4">
                     <button
+                      onClick={() => window.print()}
+                      className="w-full flex items-center justify-center gap-2 rounded-xl border border-border bg-card py-3 text-xs font-semibold text-foreground shadow-sm hover:bg-accent cursor-pointer"
+                    >
+                      Print Ticket
+                    </button>
+                    <button
                       onClick={downloadPDF}
                       disabled={isDownloading}
                       className="w-full flex items-center justify-center gap-2 rounded-xl border border-border bg-card py-3 text-xs font-semibold text-foreground shadow-sm hover:bg-accent disabled:opacity-50 cursor-pointer"
                     >
-                      {isDownloading ? "Generating..." : "Print Ticket"}
-                    </button>
-                    <button
-                      onClick={handleClose}
-                      className="w-full flex items-center justify-center gap-2 rounded-xl bg-brand py-3 text-xs font-semibold text-brand-foreground shadow-md hover:bg-brand/90 cursor-pointer"
-                    >
-                      Back to Map
+                      {isDownloading ? "Generating..." : "Download PDF"}
                     </button>
                   </div>
+                  <button
+                    onClick={handleClose}
+                    className="w-full mt-3 flex items-center justify-center gap-2 rounded-xl bg-brand py-3 text-xs font-semibold text-brand-foreground shadow-md hover:bg-brand/90 cursor-pointer"
+                  >
+                    Done & Back to Map
+                  </button>
                 </div>
               )}
             </div>

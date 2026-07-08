@@ -127,7 +127,7 @@ function TicketCard({ t, trip, route, liveEtaText, currentStopName, speed }: any
     <div className="flex flex-col gap-2">
       <div
         ref={ticketRef}
-        className="relative rounded-2xl border border-border bg-card/40 p-4 shadow-sm overflow-hidden flex flex-col gap-3.5 hover:border-brand/40 transition-colors"
+        className="print-ticket relative rounded-2xl border border-border bg-card/40 p-4 shadow-sm overflow-hidden flex flex-col gap-3.5 hover:border-brand/40 transition-colors"
       >
         <div className="flex items-center justify-between mb-1 pb-2 border-b border-border/50">
           <div className="flex items-center gap-2">
@@ -204,13 +204,21 @@ function TicketCard({ t, trip, route, liveEtaText, currentStopName, speed }: any
         </div>
       </div>
       
-      <button
-        onClick={downloadPDF}
-        disabled={isDownloading}
-        className="w-full mt-1 flex items-center justify-center gap-2 rounded-xl border border-border bg-card py-2 text-xs font-semibold text-foreground shadow-sm hover:bg-accent disabled:opacity-50 cursor-pointer"
-      >
-        {isDownloading ? "Generating..." : "Print Ticket"}
-      </button>
+      <div className="grid grid-cols-2 gap-2 mt-1">
+        <button
+          onClick={() => window.print()}
+          className="w-full flex items-center justify-center gap-2 rounded-xl border border-border bg-card py-2 text-xs font-semibold text-foreground shadow-sm hover:bg-accent cursor-pointer"
+        >
+          Print
+        </button>
+        <button
+          onClick={downloadPDF}
+          disabled={isDownloading}
+          className="w-full flex items-center justify-center gap-2 rounded-xl border border-border bg-card py-2 text-xs font-semibold text-foreground shadow-sm hover:bg-accent disabled:opacity-50 cursor-pointer"
+        >
+          {isDownloading ? "Generating..." : "Download PDF"}
+        </button>
+      </div>
     </div>
   );
 }

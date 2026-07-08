@@ -70,11 +70,14 @@ export function AiAssistantPanel() {
       {/* Floating Toggle Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-24 right-4 z-[999] flex items-center gap-2 rounded-full bg-gradient-to-r from-brand to-brand-hover px-4 py-3 text-xs font-bold text-brand-foreground shadow-lg shadow-brand/20 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer"
+        className="fixed bottom-24 right-4 z-[999] flex items-center gap-3 rounded-full bg-gradient-to-r from-brand via-blue-600 to-indigo-600 px-4 py-3 text-sm font-bold text-white shadow-xl shadow-brand/40 hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer border border-white/20 group overflow-hidden"
         aria-label="Open AI Assistant"
       >
-        <Sparkles className="h-4 w-4 animate-pulse text-yellow-300" />
-        <span>Ask BusSetu AI</span>
+        <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.2)_50%,transparent_75%)] bg-[length:250%_250%] animate-[shimmer_2s_infinite]" />
+        <div className="relative flex h-6 w-6 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm group-hover:bg-white/30 transition-colors">
+          <Sparkles className="h-3.5 w-3.5 animate-pulse text-yellow-300" />
+        </div>
+        <span className="relative tracking-wide drop-shadow-md">Ask BusSetu AI</span>
       </button>
 
       {/* Slide-out Drawer */}
