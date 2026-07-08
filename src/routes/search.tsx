@@ -12,7 +12,6 @@ import { RouteResultsPanel } from "@/components/panels/RouteResultsPanel";
 import { RouteTimeline } from "@/components/panels/RouteTimeline";
 import { LiveRadarAnnouncer } from "@/components/map/LiveRadarAnnouncer";
 import { OfflineBanner } from "@/components/state/OfflineBanner";
-import { LiveReplayControl } from "@/components/map/LiveReplayControl";
 import { AiAssistantPanel } from "@/components/panels/AiAssistantPanel";
 import { useUiStore } from "@/store/useUiStore";
 import { useLiveStore } from "@/store/useLiveStore";
@@ -118,11 +117,6 @@ function SearchPage() {
          *  focused on a single question. */}
         <div className="pointer-events-none absolute inset-x-4 bottom-4 md:bottom-auto md:top-28 md:left-4 md:right-auto md:inset-x-auto z-[550] flex justify-center md:justify-start">
           {routeQueryActive ? <RouteResultsPanel /> : <NearbyBusesPanel />}
-        </div>
-
-        {/* Bottom center: Live Replay control bar */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-4 z-[540] flex justify-center">
-          <LiveReplayControl />
         </div>
 
         {/* Right: bus details */}
