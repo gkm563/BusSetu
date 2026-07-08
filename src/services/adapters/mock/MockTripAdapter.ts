@@ -28,7 +28,14 @@ function createMockTripAdapter(): TripService {
     const now = Date.now();
     const updates: { tripId: string; patch: TripPositionUpdate }[] = [];
     for (const trip of trips) {
-      if (trip.status === "breakdown" || trip.status === "completed") continue;
+      if (trip.status === "breakdown") continue;
+
+      // Revive completed trips so they keep moving
+      if (trip.status === "completed") {
+        trip.status = "running";
+        trip.routeProgress = 0;
+        trip.gps.speed = 45 + Math.floor(Math.random() * 15);
+      }
 
       // Advance progress based on speed. distanceKm covered per second.
       const route = MOCK_ROUTES.find((r) => r.id === trip.routeId)!;
@@ -37,19 +44,31 @@ function createMockTripAdapter(): TripService {
       trip.routeProgress = Math.min(1, trip.routeProgress + delta);
 
       if (trip.routeProgress >= 1) {
-        trip.routeProgress = 1;
-        if (trip.status !== "completed") {
-          trip.status = "completed";
-          trip.gps.speed = 0;
-          emit({
-            type: "status",
-            tripId: trip.tripId,
-            patch: {
-              status: "completed",
-              lastUpdated: new Date(now).toISOString(),
-            },
-          });
-        }
+        // Loop the trip so the radar stays lively and bus keeps moving
+        trip.routeProgress = 0;
+        trip.status = "running";
+        trip.gps.speed = 45 + Math.floor(Math.random() * 15);
+      }
+
+      // Dynamically update current and next stop based on progress
+      if (route.stops && route.stops.length > 0) {
+        const stopCount = route.stops.length;
+        const currentStopIndex = Math.min(
+          stopCount - 1,
+          Math.floor(trip.routeProgress * (stopCount - 1))
+        );
+        trip.currentStopId = route.stops[currentStopIndex].id;
+        trip.nextStopId =
+          currentStopIndex < stopCount - 1
+            ? route.stops[currentStopIndex + 1].id
+            : route.stops[stopCount - 1].id;
+            
+        // Simulate dynamic ETA for the next stop
+        const nextStopProg = (currentStopIndex + 1) / (stopCount - 1);
+        const remProg = Math.max(0, nextStopProg - trip.routeProgress);
+        const remDist = remProg * route.distanceKm;
+        const etaSec = trip.gps.speed > 0 ? (remDist / trip.gps.speed) * 3600 : 0;
+        trip.eta[trip.nextStopId] = new Date(now + etaSec * 1000).toISOString();
       }
 
       const poly = directionalPolyline(trip.routeId, trip.direction);
