@@ -4,18 +4,20 @@ import { Bot, User, X, Loader2, Sparkles, Send } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { AiChatService, type ChatMessage } from "@/services/ai/AiChatService";
 import { useGeolocation } from "@/hooks/useGeolocation";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function AiAssistantPanel() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "model",
-      text: "Namaste! I am your BusSetu AI Assistant. Ask me anything about current live buses, route speeds, seat availability, or walking ETAs on Prayagraj highways!",
+      text: "Namaste! I am BusSetu AI. Ask me anything about current live buses, route speeds, seat availability, or walking ETAs on Prayagraj highways!",
     },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const { location } = useGeolocation();
+  const { language } = useTranslation();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -39,7 +41,8 @@ export function AiAssistantPanel() {
       const response = await AiChatService.askAi(
         prompt,
         location,
-        messages.filter((m) => m.text !== messages[0].text)
+        messages.filter((m) => m.text !== messages[0].text),
+        language
       );
       setMessages((prev) => [...prev, { role: "model", text: response }]);
     } catch (err) {
@@ -71,7 +74,7 @@ export function AiAssistantPanel() {
         aria-label="Open AI Assistant"
       >
         <Sparkles className="h-4 w-4 animate-pulse text-yellow-300" />
-        <span>Ask AI Advisor</span>
+        <span>Ask BusSetu AI</span>
       </button>
 
       {/* Slide-out Drawer */}
@@ -92,7 +95,7 @@ export function AiAssistantPanel() {
                 </div>
                 <div>
                   <h3 className="font-display font-bold text-xs text-foreground flex items-center gap-1.5">
-                    Live Telemetry AI Advisor
+                    BusSetu AI
                     <span className="inline-block h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
                   </h3>
                   <p className="text-[10px] text-muted-foreground">Powered by Gemini 2.5 Flash</p>

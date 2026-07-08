@@ -6,7 +6,7 @@ export interface ChatMessage {
 }
 
 export const AiChatService = {
-  getSystemContext(userLocation: { lat: number; lng: number } | null) {
+  getSystemContext(userLocation: { lat: number; lng: number } | null, language: string = "english") {
     const live = useLiveStore.getState();
     const activeTrips = live.tripIdList.map((id) => {
       const t = live.tripsById[id];
@@ -36,7 +36,7 @@ export const AiChatService = {
     }));
 
     return `
-You are the BusSetu AI Assistant, a smart transit advisor tracking real-time Prayagraj highway telemetries.
+You are BusSetu AI, a smart transit advisor tracking real-time Prayagraj highway telemetries.
 User Location: ${userLocation ? `Latitude: ${userLocation.lat}, Longitude: ${userLocation.lng} (Prayagraj Region)` : "Unknown"}
 Active Live Buses: ${JSON.stringify(activeTrips)}
 Stops Catalog: ${JSON.stringify(stops)}
@@ -45,12 +45,13 @@ Instructions:
 - Provide accurate recommendations based on live seats counts, speed metrics, delay counts, and coordinates.
 - If the user asks about travel times or walking durations, calculate walking ETAs assuming average walking speed is 4.8 km/h.
 - Be concise (2-4 sentences max per response). Keep it friendly and conversational.
+- CRITICAL: You MUST reply entirely in the ${language.toUpperCase()} language. If the user language is Hindi, reply in fluent Hindi. If it is Thai, reply in Thai. Do NOT use English unless the selected language is English.
 `;
   },
 
-  async askAi(prompt: string, userLocation: { lat: number; lng: number } | null, history: ChatMessage[]) {
+  async askAi(prompt: string, userLocation: { lat: number; lng: number } | null, history: ChatMessage[], language: string = "english") {
     const key = import.meta.env.VITE_GEMINI_API_KEY || "YOUR_API_KEY_HERE";
-    const context = this.getSystemContext(userLocation);
+    const context = this.getSystemContext(userLocation, language);
 
     // Format history for Gemini API
     const contents = [
