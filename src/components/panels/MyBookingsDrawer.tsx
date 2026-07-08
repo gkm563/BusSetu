@@ -103,19 +103,21 @@ function TicketCard({ t, trip, route, liveEtaText, currentStopName, speed }: any
   const ticketRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const downloadPDF = async () => {
+  const downloadTicket = async () => {
     if (!ticketRef.current) return;
     setIsDownloading(true);
     try {
-      const canvas = await html2canvas(ticketRef.current, { scale: 2, useCORS: true });
+      const canvas = await html2canvas(ticketRef.current, { scale: 3, useCORS: true, backgroundColor: null });
       const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "px",
-        format: [canvas.width / 2, canvas.height / 2]
-      });
-      pdf.addImage(imgData, "PNG", 0, 0, canvas.width / 2, canvas.height / 2);
-      pdf.save(`BusSetu_Ticket_${t.ticketCode}.pdf`);
+      
+      const link = document.createElement("a");
+      link.href = imgData;
+      const safePassengerName = t.passengerName.replace(/[^a-zA-Z0-9]/g, "_") || "Passenger";
+      const safeBusNumber = t.busNumber.replace(/[^a-zA-Z0-9]/g, "_") || "Bus";
+      link.download = `BusSetu_Ticket_${safePassengerName}_${safeBusNumber}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (err) {
       console.error(err);
     } finally {
@@ -212,11 +214,11 @@ function TicketCard({ t, trip, route, liveEtaText, currentStopName, speed }: any
           Print
         </button>
         <button
-          onClick={downloadPDF}
+          onClick={downloadTicket}
           disabled={isDownloading}
           className="w-full flex items-center justify-center gap-2 rounded-xl border border-border bg-card py-2 text-xs font-semibold text-foreground shadow-sm hover:bg-accent disabled:opacity-50 cursor-pointer"
         >
-          {isDownloading ? "Generating..." : "Download PDF"}
+          {isDownloading ? "Generating..." : "Download Ticket"}
         </button>
       </div>
     </div>

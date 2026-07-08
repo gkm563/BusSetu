@@ -193,19 +193,21 @@ export function CatchThisBusModal({ isOpen, onClose }: { isOpen: boolean; onClos
   const ticketRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const downloadPDF = async () => {
+  const downloadTicket = async () => {
     if (!ticketRef.current) return;
     setIsDownloading(true);
     try {
-      const canvas = await html2canvas(ticketRef.current, { scale: 2, useCORS: true });
+      const canvas = await html2canvas(ticketRef.current, { scale: 3, useCORS: true, backgroundColor: null });
       const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "px",
-        format: [canvas.width / 2, canvas.height / 2]
-      });
-      pdf.addImage(imgData, "PNG", 0, 0, canvas.width / 2, canvas.height / 2);
-      pdf.save(`BusSetu_Ticket_${ticketCode}.pdf`);
+      
+      const link = document.createElement("a");
+      link.href = imgData;
+      const safePassengerName = passengerName.replace(/[^a-zA-Z0-9]/g, "_") || "Passenger";
+      const safeBusNumber = view.bus.busNumber.replace(/[^a-zA-Z0-9]/g, "_") || "Bus";
+      link.download = `BusSetu_Ticket_${safePassengerName}_${safeBusNumber}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (err) {
       console.error(err);
     } finally {
@@ -280,11 +282,11 @@ export function CatchThisBusModal({ isOpen, onClose }: { isOpen: boolean; onClos
       {isOpen && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
           <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="relative flex h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-3xl border border-border bg-background shadow-2xl"
+            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="relative flex h-[90vh] md:h-[85vh] max-h-[800px] w-full max-w-lg md:max-w-xl flex-col overflow-hidden rounded-3xl border border-border bg-background shadow-2xl"
           >
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-border/60 p-4">
@@ -519,63 +521,74 @@ export function CatchThisBusModal({ isOpen, onClose }: { isOpen: boolean; onClos
                   </div>
 
                   {/* Digital Boarding Pass */}
-                  <div ref={ticketRef} className="print-ticket relative rounded-3xl border border-border bg-card shadow-lg overflow-hidden">
+                  <div ref={ticketRef} className="print-ticket relative rounded-[2rem] bg-card shadow-2xl shadow-brand/10 overflow-hidden mx-auto w-full max-w-[400px]">
+                    {/* Fake perforations */}
+                    <div className="absolute left-0 top-[4.5rem] -translate-x-1/2 h-6 w-6 rounded-full bg-background z-10" />
+                    <div className="absolute right-0 top-[4.5rem] translate-x-1/2 h-6 w-6 rounded-full bg-background z-10" />
+                    
                     {/* Ticket header */}
-                    <div className="bg-brand p-4 text-brand-foreground flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <img src="/favicon.jpg" alt="Logo" className="h-5 w-5 rounded object-cover border border-white/20 bg-white" />
-                        <span className="font-display font-bold text-sm tracking-wide uppercase">BusSetu Ticket</span>
+                    <div className="bg-gradient-to-r from-brand to-indigo-600 p-5 text-brand-foreground flex justify-between items-center relative">
+                      <div className="flex items-center gap-2.5">
+                        <img src="/favicon.jpg" alt="Logo" className="h-7 w-7 rounded-md object-cover border-2 border-white/30 bg-white shadow-sm" />
+                        <span className="font-display font-bold text-sm tracking-widest uppercase text-white drop-shadow-sm">BusSetu Pass</span>
                       </div>
-                      <span className="font-mono text-xs font-semibold">{ticketCode}</span>
+                      <span className="font-mono text-[10px] font-bold bg-black/20 backdrop-blur-sm px-2.5 py-1 rounded-md text-white/90 tracking-wider shadow-inner">{ticketCode}</span>
                     </div>
 
                     {/* Ticket body */}
-                    <div className="p-4 space-y-4 text-xs">
-                      <div className="grid grid-cols-2 gap-4">
+                    <div className="p-6 space-y-5 text-xs bg-[linear-gradient(to_bottom,var(--color-card)_0%,color-mix(in_oklab,var(--color-muted)_30%,transparent)_100%)] relative">
+                      <div className="absolute inset-x-4 top-0 border-t-2 border-dashed border-border/40" />
+                      
+                      <div className="grid grid-cols-2 gap-4 pt-1">
                         <div>
-                          <span className="text-[10px] text-muted-foreground block uppercase">Passenger</span>
-                          <span className="font-semibold text-sm text-foreground truncate block">
+                          <span className="text-[9px] text-muted-foreground block uppercase font-bold tracking-widest mb-1.5">Passenger</span>
+                          <span className="font-display font-semibold text-base text-foreground truncate block drop-shadow-sm">
                             {passengerName || "User"}
                           </span>
                         </div>
-                        <div>
-                          <span className="text-[10px] text-muted-foreground block uppercase">Seat Number(s)</span>
-                          <span className="font-mono font-bold text-sm text-brand block">
+                        <div className="text-right">
+                          <span className="text-[9px] text-muted-foreground block uppercase font-bold tracking-widest mb-1.5">Seat Number(s)</span>
+                          <span className="font-mono font-bold text-lg text-brand block drop-shadow-sm">
                             {selectedSeats.join(", ")}
                           </span>
                         </div>
                       </div>
 
-                      <div className="border-t border-dashed border-border pt-3 grid grid-cols-2 gap-4">
+                      <div className="border-t-2 border-dashed border-border/60 pt-4 grid grid-cols-2 gap-4">
                         <div>
-                          <span className="text-[10px] text-muted-foreground block uppercase">Nearest Stop</span>
-                          <span className="font-semibold text-foreground truncate block">
+                          <span className="text-[9px] text-muted-foreground block uppercase font-bold tracking-widest mb-1.5">Nearest Stop</span>
+                          <span className="font-medium text-foreground truncate block text-[13px]">
                             {assessment.targetStopName}
                           </span>
                         </div>
-                        <div>
-                          <span className="text-[10px] text-muted-foreground block uppercase">Boarding ETA</span>
-                          <span className="font-mono font-semibold text-foreground block">
+                        <div className="text-right">
+                          <span className="text-[9px] text-muted-foreground block uppercase font-bold tracking-widest mb-1.5">Boarding ETA</span>
+                          <span className="font-mono font-semibold text-foreground block text-[13px]">
                             {formatMin(assessment.busEtaSec)}
                           </span>
                         </div>
                       </div>
 
-                      <div className="border-t border-dashed border-border pt-3 grid grid-cols-2 gap-4">
+                      <div className="border-t-2 border-dashed border-border/60 pt-4 grid grid-cols-2 gap-4">
                         <div>
-                          <span className="text-[10px] text-muted-foreground block uppercase">Fare Price</span>
-                          <span className="font-bold text-success text-sm block">₹{120 * (selectedSeats.length || 1)}.00</span>
+                          <span className="text-[9px] text-muted-foreground block uppercase font-bold tracking-widest mb-1.5">Fare Price</span>
+                          <span className="font-bold text-success text-base block">₹{120 * (selectedSeats.length || 1)}.00</span>
                         </div>
-                        <div>
-                          <span className="text-[10px] text-muted-foreground block uppercase">Status</span>
-                          <span className="font-semibold text-success block">● CONFIRMED</span>
+                        <div className="text-right">
+                          <span className="text-[9px] text-muted-foreground block uppercase font-bold tracking-widest mb-1.5">Status</span>
+                          <span className="font-bold text-success flex items-center justify-end gap-1.5 text-sm">
+                            <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
+                            CONFIRMED
+                          </span>
                         </div>
                       </div>
 
                       {/* Barcode/QR Section */}
-                      <div className="border-t border-dashed border-border pt-4 flex flex-col items-center justify-center gap-2">
-                        <QrCode className="h-20 w-20 text-foreground" />
-                        <span className="font-mono text-[9px] text-muted-foreground tracking-widest uppercase">
+                      <div className="border-t-2 border-dashed border-border/60 pt-5 flex flex-col items-center justify-center gap-2">
+                        <div className="rounded-2xl bg-white p-3 shadow-md border border-black/5 ring-1 ring-black/5">
+                          <QrCode className="h-20 w-20 text-black" />
+                        </div>
+                        <span className="font-mono text-[9px] text-muted-foreground tracking-widest uppercase mt-1">
                           scan on bus entry
                         </span>
                       </div>
@@ -590,11 +603,11 @@ export function CatchThisBusModal({ isOpen, onClose }: { isOpen: boolean; onClos
                       Print Ticket
                     </button>
                     <button
-                      onClick={downloadPDF}
+                      onClick={downloadTicket}
                       disabled={isDownloading}
                       className="w-full flex items-center justify-center gap-2 rounded-xl border border-border bg-card py-3 text-xs font-semibold text-foreground shadow-sm hover:bg-accent disabled:opacity-50 cursor-pointer"
                     >
-                      {isDownloading ? "Generating..." : "Download PDF"}
+                      {isDownloading ? "Generating..." : "Download Ticket"}
                     </button>
                   </div>
                   <button
