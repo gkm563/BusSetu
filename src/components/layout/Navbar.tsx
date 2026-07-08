@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Radar, User, ChevronDown } from "lucide-react";
+import { Radar, User, ChevronDown, BusFront } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
@@ -110,8 +110,8 @@ export function Navbar() {
             to="/search"
             className="hidden items-center gap-1.5 rounded-full bg-brand px-3.5 py-2 text-xs font-semibold text-brand-foreground shadow-md shadow-brand/25 transition-transform hover:scale-[1.03] sm:inline-flex cursor-pointer"
           >
-            <Radar className="h-3.5 w-3.5 animate-pulse" aria-hidden />
-            {t("liveRadar")}
+            <BusFront className="h-3.5 w-3.5" aria-hidden />
+            Search Buses
             <span className="ml-1 rounded-full bg-white/20 px-1.5 py-0.5 text-[9px] font-bold text-white tracking-wider">
               🟢 {liveCount} Live
             </span>
