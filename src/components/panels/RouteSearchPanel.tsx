@@ -42,10 +42,10 @@ export function RouteSearchPanel({ variant = "vertical" }: { variant?: "vertical
   const recents = useRecentSearches();
   const recentBuses = useRecentBuses();
 
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const [from, setFrom] = useState("Prayagraj");
+  const [to, setTo] = useState("Lucknow");
   const [via, setVia] = useState("");
-  const [departAt, setDepartAt] = useState("");
+  const [departAt, setDepartAt] = useState(new Date().toISOString().split("T")[0]);
   const [showExtras, setShowExtras] = useState(false);
 
   // Sync external store changes (e.g. navigation from /routes page) into
