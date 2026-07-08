@@ -30,6 +30,4 @@ export const MOCK_STOPS: Stop[] = [
   { id: "s-bhadohi", name: "Bhadohi", city: "Bhadohi", lat: 25.3931, lng: 82.5687 },
   { id: "s-gyanpur", name: "Gyanpur", city: "Bhadohi", lat: 25.2500, lng: 82.6500 },
   { id: "s-lucknow-alambagh", name: "Alambagh ISBT", city: "Lucknow", lat: 26.8067, lng: 80.9080 },
-  { id: "s-rae-bareli", name: "Rae Bareli", city: "Rae Bareli", lat: 26.2300, lng: 81.2400 },
-  { id: "s-pratapgarh", name: "Pratapgarh", city: "Pratapgarh", lat: 25.8975, lng: 81.9500 },
 ];
