@@ -93,10 +93,8 @@ function SearchPage() {
   }, [selectedTripId, busNumber]);
 
   return (
-    <div className="flex h-screen flex-col bg-background">
-      <Navbar />
-      <div className="relative flex-1 overflow-hidden">
-        <BusMapClient />
+    <div className="relative h-screen w-screen overflow-hidden bg-background">
+      <BusMapClient />
 
         {/* Top overlay: route search */}
         <div className="pointer-events-none absolute inset-x-0 top-4 z-[550] flex flex-col items-center gap-3 px-4">
@@ -129,7 +127,6 @@ function SearchPage() {
 
         {/* Offline / stale-data top banner */}
         <OfflineBanner />
-      </div>
     </div>
   );
 }
