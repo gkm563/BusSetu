@@ -6,7 +6,7 @@ export interface ChatMessage {
 }
 
 export const AiChatService = {
-  getSystemContext(userLocation: { lat: number; lng: number } | null, language: string = "english") {
+  getSystemContext(userLocation: { lat: number; lng: number } | null, languageCode: string = "en") {
     const live = useLiveStore.getState();
     const activeTrips = live.tripIdList.map((id) => {
       const t = live.tripsById[id];
@@ -35,6 +35,9 @@ export const AiChatService = {
       lng: s.lng,
     }));
 
+    const langMap: Record<string, string> = { en: "English", hi: "Hindi", th: "Thai" };
+    const langName = langMap[languageCode] || "English";
+
     return `
 You are BusSetu AI, a smart transit advisor tracking real-time Prayagraj highway telemetries.
 User Location: ${userLocation ? `Latitude: ${userLocation.lat}, Longitude: ${userLocation.lng} (Prayagraj Region)` : "Unknown"}
@@ -45,7 +48,7 @@ Instructions:
 - Provide accurate recommendations based on live seats counts, speed metrics, delay counts, and coordinates.
 - If the user asks about travel times or walking durations, calculate walking ETAs assuming average walking speed is 4.8 km/h.
 - Be concise (2-4 sentences max per response). Keep it friendly and conversational.
-- CRITICAL: You MUST reply entirely in the ${language.toUpperCase()} language. If the user language is Hindi, reply in fluent Hindi. If it is Thai, reply in Thai. Do NOT use English unless the selected language is English.
+- CRITICAL: You MUST reply entirely in ${langName}. If the user language is Hindi, reply in fluent Hindi (Devanagari script). If it is Thai, reply in Thai script. Do NOT use English unless the selected language is English.
 `;
   },
 
