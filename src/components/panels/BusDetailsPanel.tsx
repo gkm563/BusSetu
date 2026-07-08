@@ -94,7 +94,7 @@ export function BusDetailsPanel() {
           transition={{ type: "spring", damping: 28, stiffness: 280 }}
           role="dialog"
           aria-label={`Bus ${view.bus.busNumber} details`}
-          className="glass-panel pointer-events-auto absolute bottom-4 right-4 z-[600] flex max-h-[calc(100vh-8rem)] w-[min(420px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl border border-border/60 shadow-2xl md:bottom-auto md:top-28 md:right-20"
+          className="glass-panel pointer-events-auto absolute bottom-4 right-4 z-[600] flex max-h-[calc(100vh-8rem)] w-[min(420px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl border border-border/60 shadow-2xl md:bottom-auto md:top-28 md:right-4"
         >
           <PanelBody
             view={view}
