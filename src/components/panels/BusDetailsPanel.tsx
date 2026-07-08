@@ -1036,6 +1036,21 @@ function AnalyticsStat({
  *  COMPACT TIMELINE
  * ============================================================ */
 
+const compactContainerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05,
+    },
+  },
+};
+
+const compactItemVariants = {
+  hidden: { opacity: 0, x: -8 },
+  show: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
+};
+
 function CompactTimeline({ view, onExpand }: { view: LiveBusView; onExpand: () => void }) {
   const { route, trip } = view;
   const stops = route.stops;
@@ -1055,19 +1070,24 @@ function CompactTimeline({ view, onExpand }: { view: LiveBusView; onExpand: () =
         <button
           type="button"
           onClick={onExpand}
-          className="text-[10px] font-semibold text-brand hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded"
+          className="text-[10px] font-semibold text-brand hover:underline hover:scale-[1.03] transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded"
         >
           View all stops
         </button>
       </div>
-      <ol className="relative ml-1.5 space-y-3 border-l border-dashed border-border/70 pl-4">
+      <motion.ol
+        variants={compactContainerVariants}
+        initial="hidden"
+        animate="show"
+        className="relative ml-1.5 space-y-3 border-l border-dashed border-border/70 pl-4"
+      >
         {visible.map((s, i) => {
           const absIdx = start + i;
           const state =
             absIdx < currentIdx ? "done" : absIdx === currentIdx ? "current" : "upcoming";
           const etaIso = trip.eta[s.id];
           return (
-            <li key={s.id} className="relative">
+            <motion.li key={s.id} variants={compactItemVariants} className="relative">
               <span
                 className={`absolute -left-[21px] top-0.5 grid h-3.5 w-3.5 place-items-center rounded-full border-2 ${
                   state === "done"
@@ -1082,6 +1102,9 @@ function CompactTimeline({ view, onExpand }: { view: LiveBusView; onExpand: () =
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-brand" />
                 )}
               </span>
+              {state === "current" && (
+                <span className="absolute -left-[21px] top-0.5 h-3.5 w-3.5 rounded-full border border-brand animate-ping opacity-75" />
+              )}
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0">
                   <div
@@ -1104,10 +1127,10 @@ function CompactTimeline({ view, onExpand }: { view: LiveBusView; onExpand: () =
                   </div>
                 )}
               </div>
-            </li>
+            </motion.li>
           );
         })}
-      </ol>
+      </motion.ol>
     </section>
   );
 }

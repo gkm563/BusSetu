@@ -57,6 +57,21 @@ export function RouteTimeline() {
   );
 }
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.04,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, x: -10 },
+  show: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
+};
+
 function Timeline({ view }: { view: ReturnType<typeof useLiveBus> }) {
   if (!view) return null;
   const { trip, route } = view;
@@ -64,14 +79,19 @@ function Timeline({ view }: { view: ReturnType<typeof useLiveBus> }) {
   const currentIdx = stops.findIndex((s) => s.id === trip.currentStopId);
 
   return (
-    <ol className="relative space-y-4 pl-6">
+    <motion.ol
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      className="relative space-y-4 pl-6"
+    >
       <span className="absolute left-[9px] top-1 h-full w-0.5 bg-border" />
       {stops.map((s, i) => {
         const isPast = i < currentIdx;
         const isCurrent = i === currentIdx;
         const eta = trip.eta[s.id];
         return (
-          <li key={s.id} className="relative">
+          <motion.li key={s.id} variants={itemVariants} className="relative">
             <span
               className={`absolute -left-[18px] top-1 h-3.5 w-3.5 rounded-full border-2 ${
                 isPast
@@ -80,11 +100,15 @@ function Timeline({ view }: { view: ReturnType<typeof useLiveBus> }) {
                     ? "border-brand bg-brand shadow-[0_0_0_4px_var(--color-brand)/25]"
                     : "border-border bg-background"
               }`}
-            />
+            >
+              {isCurrent && (
+                <span className="absolute -inset-1 animate-ping rounded-full border-2 border-brand opacity-75" />
+              )}
+            </span>
             <div className="flex items-baseline justify-between gap-3">
               <div>
                 <div
-                  className={`text-sm font-semibold ${
+                  className={`text-sm font-semibold transition-colors duration-300 ${
                     isCurrent
                       ? "text-brand"
                       : isPast
@@ -106,9 +130,9 @@ function Timeline({ view }: { view: ReturnType<typeof useLiveBus> }) {
                       : "Upcoming"}
               </div>
             </div>
-          </li>
+          </motion.li>
         );
       })}
-    </ol>
+    </motion.ol>
   );
 }
