@@ -98,10 +98,9 @@ function SearchPage() {
       <div className="relative flex-1 overflow-hidden">
         <BusMapClient />
 
-        {/* Top overlay: route search + filters */}
+        {/* Top overlay: route search */}
         <div className="pointer-events-none absolute inset-x-0 top-4 z-[550] flex flex-col items-center gap-3 px-4">
           <RouteSearchPanel />
-          <FiltersPanel />
         </div>
 
         {/* Bottom-left panel: either route intelligence results, or the

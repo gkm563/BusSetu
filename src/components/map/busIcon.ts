@@ -64,7 +64,31 @@ export function busDivIcon(opts: {
         transition: transform 500ms linear;
       ">
         ${ringHtml}
-        <img src="/bus-marker.png" style="width: 100%; height: 100%; object-fit: contain;" />
+        <svg viewBox="0 0 32 36" fill="none" style="width: 100%; height: 100%;">
+          <!-- Side mirrors -->
+          <rect x="1" y="8" width="2" height="5" rx="1.2" fill="${c}" stroke="white" stroke-width="0.8" />
+          <rect x="29" y="8" width="2" height="5" rx="1.2" fill="${c}" stroke="white" stroke-width="0.8" />
+          
+          <!-- Bus body -->
+          <rect x="4" y="2" width="24" height="32" rx="5" fill="${c}" stroke="white" stroke-width="2" />
+          
+          <!-- Windshield (Blue screen) -->
+          <rect x="7" y="5" width="18" height="6" rx="1.5" fill="#38BDF8" stroke="white" stroke-width="0.8" />
+          
+          <!-- Roof details (AC unit vent) -->
+          <rect x="9" y="15" width="14" height="8" rx="2" fill="white" fill-opacity="0.35" stroke="white" stroke-width="0.8" />
+          
+          <!-- Direction indicator arrow -->
+          <path d="M16 14l3.5 4h-7z" fill="white" />
+          
+          <!-- Headlights -->
+          <circle cx="8" cy="2.5" r="1.2" fill="white" />
+          <circle cx="24" cy="2.5" r="1.2" fill="white" />
+          
+          <!-- Rear brake lights -->
+          <rect x="7" y="32.5" width="3" height="1" fill="#EF4444" />
+          <rect x="22" y="32.5" width="3" height="1" fill="#EF4444" />
+        </svg>
       </div>
       
       <!-- Static Horizontal label -->
@@ -98,17 +122,22 @@ export function busDivIcon(opts: {
 
 export function stopDivIcon() {
   return L.divIcon({
-    html: `<div style="width:14px;height:14px;border-radius:9999px;background:white;border:3px solid var(--color-brand);box-shadow:0 2px 6px rgb(0 0 0 / .2);"></div>`,
+    html: `<div style="position:relative;width:24px;height:24px;display:flex;align-items:center;justify-content:center;margin-left:-12px;margin-top:-24px;">
+      <img src="/bus-marker.png" style="width:100%; height:100%; object-fit:contain;" />
+    </div>`,
     className: "",
-    iconSize: [14, 14],
-    iconAnchor: [7, 7],
+    iconSize: [24, 24],
+    iconAnchor: [12, 24],
   });
 }
 
 export function activeStopDivIcon(name: string) {
   return L.divIcon({
-    html: `<div style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;width:80px;height:50px;margin-left:-33px;margin-top:-25px;">
-      <div style="width:12px;height:12px;border-radius:9999px;background:#2563EB;border:2.5px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3);position:relative;z-index:10;"></div>
+    html: `<div style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100px;height:60px;margin-left:-50px;margin-top:-40px;">
+      <div style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;position:relative;z-index:10;">
+        <span style="position:absolute;inset:-4px;border-radius:9999px;background:var(--color-brand);opacity:.25;animation:pulse-ring 2s ease-out infinite;"></span>
+        <img src="/bus-marker.png" style="width:100%; height:100%; object-fit:contain; position:relative; z-index:11;" />
+      </div>
       <div style="
         margin-top: 3px;
         background: white;
@@ -116,19 +145,21 @@ export function activeStopDivIcon(name: string) {
         font-family: system-ui, sans-serif;
         font-size: 8px;
         font-weight: 700;
-        padding: 1px 3.5px;
+        padding: 1px 4.5px;
         border-radius: 4px;
         border: 1px solid #CBD5E1;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
         white-space: nowrap;
         pointer-events: none;
+        position: relative;
+        z-index: 12;
       ">
         ${name}
       </div>
     </div>`,
     className: "",
-    iconSize: [14, 14],
-    iconAnchor: [7, 7],
+    iconSize: [24, 24],
+    iconAnchor: [12, 24],
   });
 }
 
