@@ -497,66 +497,23 @@ function StopsDetailsCard({
 
 function TelemetryCard({ trip }: { trip: LiveBusView["trip"] }) {
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid grid-cols-1">
       <SpeedTile speed={trip.gps.speed} />
-      <CompassTile heading={trip.gps.heading} />
-      <GpsTile accuracy={trip.gps.gpsAccuracy} />
     </div>
   );
 }
 
 function SpeedTile({ speed }: { speed: number }) {
   return (
-    <div className="flex flex-col items-center justify-between rounded-2xl border border-rose-100 bg-rose-50/50 p-3 shadow-sm hover:scale-[1.02] transition-transform">
-      <div className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-rose-500">
-        <Gauge className="h-3.5 w-3.5" strokeWidth={2.5} />
+    <div className="flex items-center justify-between rounded-2xl border border-rose-100 bg-rose-50/50 px-4 py-3 shadow-sm hover:scale-[1.01] transition-transform">
+      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-rose-500">
+        <Gauge className="h-4 w-4" strokeWidth={2.5} />
         Speed
       </div>
-      <div className="font-display text-2xl font-black text-rose-600 leading-none my-1.5">{Math.round(speed)}</div>
-      <div className="text-[9px] font-extrabold text-rose-400 uppercase tracking-wider">km/h</div>
-    </div>
-  );
-}
-
-function CompassTile({ heading }: { heading: number }) {
-  const label = compassLabel(heading);
-  return (
-    <div className="flex flex-col items-center justify-between rounded-2xl border border-indigo-100 bg-indigo-50/50 p-3 shadow-sm hover:scale-[1.02] transition-transform">
-      <div className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-indigo-500">
-        <Compass className="h-3.5 w-3.5" strokeWidth={2.5} />
-        Heading
+      <div className="flex items-baseline gap-1">
+        <span className="font-display text-2xl font-black text-rose-600 leading-none">{Math.round(speed)}</span>
+        <span className="text-[9px] font-extrabold text-rose-400 uppercase tracking-wider">km/h</span>
       </div>
-      <div className="relative h-8 w-8 my-1">
-        <div className="absolute inset-0 rounded-full border border-indigo-200" />
-        <div className="absolute inset-0" style={{ transform: `rotate(${heading}deg)` }}>
-          <div className="absolute left-1/2 top-0.5 -translate-x-1/2 border-x-[4px] border-b-[7px] border-x-transparent border-b-brand" />
-          <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-brand" />
-        </div>
-      </div>
-      <div className="text-[9px] font-black text-indigo-600 uppercase tracking-wider">{label}</div>
-    </div>
-  );
-}
-
-function GpsTile({ accuracy }: { accuracy: number }) {
-  const quality =
-    accuracy < 5
-      ? { text: "Excellent", cls: "text-emerald-600 border-emerald-200 bg-emerald-50" }
-      : accuracy < 15
-        ? { text: "Good", cls: "text-emerald-600 border-emerald-200 bg-emerald-50" }
-        : accuracy < 40
-          ? { text: "Fair", cls: "text-amber-600 border-amber-200 bg-amber-50" }
-          : { text: "Weak", cls: "text-rose-600 border-rose-200 bg-rose-50" };
-  return (
-    <div className="flex flex-col items-center justify-between rounded-2xl border border-sky-100 bg-sky-50/50 p-3 shadow-sm hover:scale-[1.02] transition-transform">
-      <div className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-sky-500">
-        <Radio className="h-3.5 w-3.5" strokeWidth={2.5} />
-        GPS
-      </div>
-      <div className="font-display text-[15px] font-black text-sky-600 leading-none my-1.5">
-        ±{accuracy.toFixed(0)}m
-      </div>
-      <div className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${quality.cls}`}>{quality.text}</div>
     </div>
   );
 }
