@@ -3,6 +3,9 @@ import { Ticket, X, ArrowRight, ShieldCheck, QrCode } from "lucide-react";
 import { useUiStore } from "@/store/useUiStore";
 import { useLiveStore } from "@/store/useLiveStore";
 import { formatEta } from "@/utils/format";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import { useRef, useState } from "react";
 
 interface MyBookingsDrawerProps {
   isOpen: boolean;
@@ -76,77 +79,15 @@ export function MyBookingsDrawer({ isOpen, onClose }: MyBookingsDrawerProps) {
                     : "Live";
 
                   return (
-                    <div
+                    <TicketCard
                       key={t.ticketCode}
-                      className="relative rounded-2xl border border-border bg-card/40 p-4 shadow-sm overflow-hidden flex flex-col gap-3.5 hover:border-brand/40 transition-colors"
-                    >
-                      {/* Ticket header */}
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <span className="text-[9px] font-bold text-brand uppercase tracking-wider">
-                            🚌 {t.busNumber}
-                          </span>
-                          <h4 className="font-display font-bold text-xs text-foreground mt-0.5">
-                            {t.boardingStop} <ArrowRight className="inline-block h-3 w-3 mx-1 text-muted-foreground" /> {t.alightingStop}
-                          </h4>
-                        </div>
-                        <span className="font-mono text-[9px] font-bold bg-muted px-2 py-0.5 rounded text-muted-foreground">
-                          {t.ticketCode}
-                        </span>
-                      </div>
-
-                      {/* Passenger details */}
-                      <div className="grid grid-cols-3 gap-2 text-[10px] border-t border-border/50 pt-2.5">
-                        <div>
-                          <span className="text-[8px] text-muted-foreground uppercase block">Passenger</span>
-                          <span className="font-semibold text-foreground truncate block">{t.passengerName}</span>
-                        </div>
-                        <div>
-                          <span className="text-[8px] text-muted-foreground uppercase block">Seat(s)</span>
-                          <span className="font-mono font-bold text-brand block">{t.seatNumbers?.join(", ")}</span>
-                        </div>
-                        <div>
-                          <span className="text-[8px] text-muted-foreground uppercase block">Fare</span>
-                          <span className="font-semibold text-success block">₹{t.fare}</span>
-                        </div>
-                      </div>
-
-                      {/* Dynamic Telemetry Status */}
-                      {trip ? (
-                        <div className="rounded-xl bg-brand/5 border border-brand/10 p-2.5 flex items-center justify-between text-[10px]">
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="relative flex h-2 w-2">
-                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success/70" />
-                              <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
-                            </span>
-                            <div className="min-w-0">
-                              <span className="text-muted-foreground block text-[8px] uppercase font-bold">
-                                Live Tracking Status
-                              </span>
-                              <span className="font-medium text-foreground truncate block">
-                                {currentStopName ? `Near ${currentStopName}` : `${speed} km/h`}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-muted-foreground block text-[8px] uppercase font-bold">ETA</span>
-                            <span className="font-mono font-bold text-brand">{liveEtaText}</span>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="rounded-xl bg-muted/40 p-2 text-center text-[9px] text-muted-foreground">
-                          Bus offline · Trip completed
-                        </div>
-                      )}
-
-                      {/* QR Button stub */}
-                      <div className="flex items-center justify-between border-t border-dashed border-border/70 pt-2.5">
-                        <span className="text-[9px] text-success font-semibold flex items-center gap-1">
-                          <ShieldCheck className="h-3.5 w-3.5" /> Booked Live
-                        </span>
-                        <QrCode className="h-5 w-5 text-muted-foreground/60" />
-                      </div>
-                    </div>
+                      t={t}
+                      trip={trip}
+                      route={route}
+                      liveEtaText={liveEtaText}
+                      currentStopName={currentStopName}
+                      speed={speed}
+                    />
                   );
                 })
               )}
@@ -155,5 +96,121 @@ export function MyBookingsDrawer({ isOpen, onClose }: MyBookingsDrawerProps) {
         </>
       )}
     </AnimatePresence>
+  );
+}
+
+function TicketCard({ t, trip, route, liveEtaText, currentStopName, speed }: any) {
+  const ticketRef = useRef<HTMLDivElement>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const downloadPDF = async () => {
+    if (!ticketRef.current) return;
+    setIsDownloading(true);
+    try {
+      const canvas = await html2canvas(ticketRef.current, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "px",
+        format: [canvas.width / 2, canvas.height / 2]
+      });
+      pdf.addImage(imgData, "PNG", 0, 0, canvas.width / 2, canvas.height / 2);
+      pdf.save(`BusSetu_Ticket_${t.ticketCode}.pdf`);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div
+        ref={ticketRef}
+        className="relative rounded-2xl border border-border bg-card/40 p-4 shadow-sm overflow-hidden flex flex-col gap-3.5 hover:border-brand/40 transition-colors"
+      >
+        <div className="flex items-center justify-between mb-1 pb-2 border-b border-border/50">
+          <div className="flex items-center gap-2">
+            <img src="/favicon.jpg" alt="Logo" className="h-4 w-4 rounded" />
+            <span className="font-display font-bold text-xs uppercase text-foreground tracking-wide">BusSetu Ticket</span>
+          </div>
+          <span className="font-mono text-[9px] font-bold bg-muted px-2 py-0.5 rounded text-muted-foreground">
+            {t.ticketCode}
+          </span>
+        </div>
+        
+        {/* Ticket header */}
+        <div className="flex justify-between items-start">
+          <div>
+            <span className="text-[9px] font-bold text-brand uppercase tracking-wider">
+              🚌 {t.busNumber}
+            </span>
+            <h4 className="font-display font-bold text-xs text-foreground mt-0.5">
+              {t.boardingStop} <ArrowRight className="inline-block h-3 w-3 mx-1 text-muted-foreground" /> {t.alightingStop}
+            </h4>
+          </div>
+        </div>
+
+        {/* Passenger details */}
+        <div className="grid grid-cols-3 gap-2 text-[10px] border-t border-border/50 pt-2.5">
+          <div>
+            <span className="text-[8px] text-muted-foreground uppercase block">Passenger</span>
+            <span className="font-semibold text-foreground truncate block">{t.passengerName}</span>
+          </div>
+          <div>
+            <span className="text-[8px] text-muted-foreground uppercase block">Seat(s)</span>
+            <span className="font-mono font-bold text-brand block">{t.seatNumbers?.join(", ")}</span>
+          </div>
+          <div>
+            <span className="text-[8px] text-muted-foreground uppercase block">Fare</span>
+            <span className="font-semibold text-success block">₹{t.fare}</span>
+          </div>
+        </div>
+
+        {/* Dynamic Telemetry Status */}
+        {trip ? (
+          <div className="rounded-xl bg-brand/5 border border-brand/10 p-2.5 flex items-center justify-between text-[10px]">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success/70" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+              </span>
+              <div className="min-w-0">
+                <span className="text-muted-foreground block text-[8px] uppercase font-bold">
+                  Live Tracking Status
+                </span>
+                <span className="font-medium text-foreground truncate block">
+                  {currentStopName ? `Near ${currentStopName}` : `${speed} km/h`}
+                </span>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="text-muted-foreground block text-[8px] uppercase font-bold">ETA</span>
+              <span className="font-mono font-bold text-brand">{liveEtaText}</span>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-xl bg-muted/40 p-2 text-center text-[9px] text-muted-foreground">
+            Bus offline · Trip completed
+          </div>
+        )}
+
+        {/* QR Button stub */}
+        <div className="flex items-center justify-between border-t border-dashed border-border/70 pt-2.5">
+          <span className="text-[9px] text-success font-semibold flex items-center gap-1">
+            <ShieldCheck className="h-3.5 w-3.5" /> Booked Live
+          </span>
+          <QrCode className="h-5 w-5 text-muted-foreground/60" />
+        </div>
+      </div>
+      
+      <button
+        onClick={downloadPDF}
+        disabled={isDownloading}
+        className="w-full mt-1 flex items-center justify-center gap-2 rounded-xl border border-border bg-card py-2 text-xs font-semibold text-foreground shadow-sm hover:bg-accent disabled:opacity-50 cursor-pointer"
+      >
+        {isDownloading ? "Generating..." : "Print Ticket"}
+      </button>
+    </div>
   );
 }

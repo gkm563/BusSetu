@@ -90,8 +90,8 @@ export function AiAssistantPanel() {
             {/* Header */}
             <div className="flex items-center justify-between border-b border-border/60 bg-muted/20 px-4 py-3.5">
               <div className="flex items-center gap-2">
-                <div className="grid h-8 w-8 place-items-center rounded-xl bg-brand/10 text-brand">
-                  <Bot className="h-4.5 w-4.5" />
+                <div className="grid h-8 w-8 place-items-center rounded-xl bg-white border border-border/50 overflow-hidden shrink-0">
+                  <img src="/favicon.jpg" alt="AI" className="h-full w-full object-cover" />
                 </div>
                 <div>
                   <h3 className="font-display font-bold text-xs text-foreground flex items-center gap-1.5">

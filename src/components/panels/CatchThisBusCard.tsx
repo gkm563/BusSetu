@@ -9,7 +9,9 @@ import {
   AlertTriangle,
   QrCode,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useSmartDiscovery } from "@/hooks/useSmartDiscovery";
 import { useUiStore } from "@/store/useUiStore";
@@ -187,6 +189,29 @@ export function CatchThisBusModal({ isOpen, onClose }: { isOpen: boolean; onClos
   const [passengerAge, setPassengerAge] = useState("");
   const [ticketCode] = useState(() => "BST" + Math.floor(100000 + Math.random() * 900000));
   const bookTicket = useUiStore((s) => s.bookTicket);
+
+  const ticketRef = useRef<HTMLDivElement>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const downloadPDF = async () => {
+    if (!ticketRef.current) return;
+    setIsDownloading(true);
+    try {
+      const canvas = await html2canvas(ticketRef.current, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "px",
+        format: [canvas.width / 2, canvas.height / 2]
+      });
+      pdf.addImage(imgData, "PNG", 0, 0, canvas.width / 2, canvas.height / 2);
+      pdf.save(`BusSetu_Ticket_${ticketCode}.pdf`);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   const assessment = useMemo(
     () => (view && location ? CatchService.assess({ view, user: location }) : null),
@@ -494,12 +519,12 @@ export function CatchThisBusModal({ isOpen, onClose }: { isOpen: boolean; onClos
                   </div>
 
                   {/* Digital Boarding Pass */}
-                  <div className="relative rounded-3xl border border-border bg-card shadow-lg overflow-hidden">
+                  <div ref={ticketRef} className="relative rounded-3xl border border-border bg-card shadow-lg overflow-hidden">
                     {/* Ticket header */}
                     <div className="bg-brand p-4 text-brand-foreground flex justify-between items-center">
-                      <div className="flex items-center gap-1.5">
-                        <Sparkles className="h-4 w-4" />
-                        <span className="font-display font-bold text-sm tracking-wide uppercase">Boarding Pass</span>
+                      <div className="flex items-center gap-2">
+                        <img src="/favicon.jpg" alt="Logo" className="h-5 w-5 rounded object-cover border border-white/20 bg-white" />
+                        <span className="font-display font-bold text-sm tracking-wide uppercase">BusSetu Ticket</span>
                       </div>
                       <span className="font-mono text-xs font-semibold">{ticketCode}</span>
                     </div>
@@ -557,12 +582,21 @@ export function CatchThisBusModal({ isOpen, onClose }: { isOpen: boolean; onClos
                     </div>
                   </div>
 
-                  <button
-                    onClick={handleClose}
-                    className="w-full mt-4 flex items-center justify-center gap-2 rounded-xl bg-brand py-3 text-xs font-semibold text-brand-foreground shadow-md cursor-pointer"
-                  >
-                    Done & Back to Map
-                  </button>
+                  <div className="grid grid-cols-2 gap-3 mt-4">
+                    <button
+                      onClick={downloadPDF}
+                      disabled={isDownloading}
+                      className="w-full flex items-center justify-center gap-2 rounded-xl border border-border bg-card py-3 text-xs font-semibold text-foreground shadow-sm hover:bg-accent disabled:opacity-50 cursor-pointer"
+                    >
+                      {isDownloading ? "Generating..." : "Print Ticket"}
+                    </button>
+                    <button
+                      onClick={handleClose}
+                      className="w-full flex items-center justify-center gap-2 rounded-xl bg-brand py-3 text-xs font-semibold text-brand-foreground shadow-md hover:bg-brand/90 cursor-pointer"
+                    >
+                      Back to Map
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
