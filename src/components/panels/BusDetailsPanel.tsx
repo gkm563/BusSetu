@@ -280,61 +280,61 @@ function StickyHeader({
   const KindIcon = operator.kind === "government" ? Landmark : BusIcon;
 
   return (
-    <div className="sticky top-0 z-10 border-b border-border/60 bg-card/85 p-4 backdrop-blur-xl">
+    <div className="sticky top-0 z-10 border-b border-slate-100 bg-white/90 p-4.5 backdrop-blur-xl shadow-sm">
       <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-start gap-3">
-          <div className="relative grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-brand to-brand/70 text-brand-foreground shadow-lg">
-            <BusIcon className="h-5 w-5" strokeWidth={2.2} />
-            <span className="absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full border-2 border-card bg-success">
+        <div className="flex min-w-0 items-center gap-3.5">
+          <div className="relative grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-brand via-brand to-indigo-600 text-white shadow-md shadow-brand/25">
+            <BusIcon className="h-6 w-6 animate-pulse" strokeWidth={2.2} />
+            <span className="absolute -bottom-0.5 -right-0.5 grid h-4.5 w-4.5 place-items-center rounded-full border-2 border-white bg-emerald-500 shadow-sm">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
             </span>
           </div>
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <div className="truncate font-display text-lg font-bold leading-tight">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="truncate font-display text-xl font-black text-slate-800 tracking-tight">
                 {bus.busNumber}
               </div>
               <span
-                className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${status.cls}`}
+                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider shadow-sm ${status.cls}`}
               >
-                <StatusIcon className="h-2.5 w-2.5" strokeWidth={2.5} />
+                <StatusIcon className="h-3 w-3" strokeWidth={2.5} />
                 {status.label}
               </span>
             </div>
-            <div className="mt-0.5 flex items-center gap-1.5 truncate text-xs text-muted-foreground">
-              <span className="truncate font-medium text-foreground/80">{operator.name}</span>
-              <span>·</span>
+            <div className="mt-1 flex items-center gap-1.5 truncate text-[11px] text-slate-500 font-bold">
+              <span className="truncate text-slate-700">{operator.name}</span>
+              <span className="text-slate-300">·</span>
               <span
-                className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider ${
+                className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${
                   operator.kind === "government"
-                    ? "bg-brand/10 text-brand"
-                    : "bg-accent text-foreground/70"
+                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                    : "bg-indigo-50 text-indigo-700 border border-indigo-200"
                 }`}
               >
                 <KindIcon className="h-2.5 w-2.5" strokeWidth={2.5} />
                 {operator.kind}
               </span>
               {bus.busType && (
-                <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <span className="rounded-md bg-slate-100 border border-slate-200/60 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-slate-500">
                   {bus.busType}
                 </span>
               )}
             </div>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="flex shrink-0 items-center gap-1.5">
           <IconButton
             label={fav.isFav ? "Remove favorite" : "Add favorite"}
             onClick={fav.toggle}
             active={fav.isFav}
           >
-            <Heart className={`h-4 w-4 ${fav.isFav ? "fill-danger text-danger" : ""}`} />
+            <Heart className={`h-4.5 w-4.5 ${fav.isFav ? "fill-rose-500 text-rose-500" : "text-slate-400 hover:text-rose-500"}`} />
           </IconButton>
           <IconButton label="Share bus" onClick={() => shareTrip(view)}>
-            <Share2 className="h-4 w-4" />
+            <Share2 className="h-4.5 w-4.5 text-slate-400 hover:text-indigo-600" />
           </IconButton>
           <IconButton label="Close" onClick={onClose}>
-            <X className="h-4 w-4" />
+            <X className="h-4.5 w-4.5 text-slate-400 hover:text-slate-600" />
           </IconButton>
         </div>
       </div>
@@ -359,10 +359,10 @@ function IconButton({
       onClick={onClick}
       aria-label={label}
       title={label}
-      className={`grid h-8 w-8 place-items-center rounded-full border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-card ${
+      className={`grid h-8.5 w-8.5 place-items-center rounded-xl border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-card cursor-pointer shadow-sm ${
         active
-          ? "border-danger/40 bg-danger/10 text-danger"
-          : "border-border/60 bg-card/70 text-muted-foreground hover:border-brand/40 hover:bg-accent hover:text-foreground"
+          ? "border-rose-200 bg-rose-50 text-rose-500 shadow-sm"
+          : "border-slate-200/80 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700 shadow-sm"
       }`}
     >
       {children}
@@ -409,39 +409,44 @@ function EtaDelayBanner({
 }) {
   const isDelayed = typeof trip.delay === "number" && trip.delay > 0;
   return (
-    <div className="flex flex-col gap-2.5 rounded-2xl border border-border/60 bg-card p-3.5 shadow-sm">
+    <div className="flex flex-col gap-3.5 rounded-3xl border border-indigo-100/80 bg-gradient-to-br from-indigo-50/50 via-white to-indigo-50/20 p-5 shadow-md shadow-indigo-100/10">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success/75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+        <div className="flex items-center gap-2">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500/75" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
           </span>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-success">
-            🟢 LIVE TRACKING
+          <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
+            LIVE TRACKING
           </span>
         </div>
         {isDelayed ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-warning/15 px-2.5 py-0.5 text-xs font-bold text-warning font-mono">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 border border-amber-200 px-3 py-1 text-xs font-black text-amber-700 font-mono shadow-sm">
             Delayed {trip.delay} min
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2.5 py-0.5 text-xs font-bold text-success font-mono">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 border border-emerald-200 px-3 py-1 text-xs font-black text-emerald-700 font-mono shadow-sm">
             On Time
           </span>
         )}
       </div>
-      <div className="flex items-baseline gap-1 mt-1">
-        <span className="text-3xl font-extrabold font-display text-brand">
-          {nextStopEta ? formatEta(nextStopEta) : "—"}
+      <div className="flex flex-col gap-1 mt-1">
+        <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">
+          Next Stop ETA
         </span>
-        <span className="text-xs text-muted-foreground font-medium">
-          to reach {nextStopName ?? "next stop"}
-        </span>
+        <div className="flex items-baseline gap-2">
+          <span className="text-4xl font-black font-display text-transparent bg-clip-text bg-gradient-to-r from-brand to-indigo-600 tracking-tight">
+            {nextStopEta ? formatEta(nextStopEta) : "—"}
+          </span>
+          <span className="text-sm text-slate-600 font-extrabold truncate">
+            to reach <span className="text-slate-800 font-black">{nextStopName ?? "next stop"}</span>
+          </span>
+        </div>
       </div>
       {distanceToUserKm !== null && (
-        <div className="mt-2 text-xs font-extrabold text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-2.5 py-1.5 inline-flex items-center gap-1.5 w-fit shadow-sm">
-          <span>🚌</span>
-          <span>{distanceToUserKm.toFixed(2)} km away from you</span>
+        <div className="mt-1 text-xs font-extrabold text-violet-700 bg-violet-50 border border-violet-100/80 rounded-xl px-3.5 py-2 inline-flex items-center gap-2 w-fit shadow-sm">
+          <span className="text-base leading-none">🚌</span>
+          <span>{distanceToUserKm.toFixed(2)} km away from your location</span>
         </div>
       )}
     </div>
@@ -458,32 +463,32 @@ function StopsDetailsCard({
   nextStopEta?: string;
 }) {
   return (
-    <div className="grid grid-cols-2 gap-2">
-      <div className="rounded-2xl border border-border/60 bg-card/60 p-3.5 flex flex-col justify-between min-w-0">
+    <div className="grid grid-cols-2 gap-3.5">
+      <div className="rounded-2xl border border-slate-200/80 bg-slate-50/50 p-4 flex flex-col justify-between min-w-0 shadow-sm">
         <div>
-          <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground block">
+          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block">
             Current Stop
           </span>
-          <span className="font-display font-semibold text-xs text-foreground block mt-1 truncate">
+          <span className="font-display font-extrabold text-[13px] text-slate-700 block mt-1.5 truncate">
             {currentStopName ?? "In transit"}
           </span>
         </div>
-        <span className="text-[10px] text-muted-foreground mt-2 block font-medium">
-          📍 Station passed
+        <span className="text-[10px] text-slate-400 mt-3.5 block font-bold flex items-center gap-1">
+          🏁 Passed
         </span>
       </div>
 
-      <div className="rounded-2xl border border-brand/20 bg-brand/5 p-3.5 flex flex-col justify-between min-w-0">
+      <div className="rounded-2xl border border-brand/35 bg-brand/5 p-4 flex flex-col justify-between min-w-0 shadow-sm shadow-brand/5">
         <div>
-          <span className="text-[9px] font-semibold uppercase tracking-wider text-brand block">
+          <span className="text-[9px] font-black uppercase tracking-widest text-brand block">
             Next Stop
           </span>
-          <span className="font-display font-semibold text-xs text-brand block mt-1 truncate">
+          <span className="font-display font-black text-[13px] text-brand block mt-1.5 truncate">
             {nextStopName ?? "—"}
           </span>
         </div>
-        <span className="text-[10px] text-brand mt-2 block font-semibold font-mono">
-          {nextStopEta ? `ETA ${formatTimeOnly(nextStopEta)}` : "—"}
+        <span className="text-[10px] text-brand mt-3.5 block font-extrabold font-mono flex items-center gap-1">
+          📍 {nextStopEta ? `${formatTimeOnly(nextStopEta)}` : "—"}
         </span>
       </div>
     </div>
@@ -492,25 +497,23 @@ function StopsDetailsCard({
 
 function TelemetryCard({ trip }: { trip: LiveBusView["trip"] }) {
   return (
-    <div className="rounded-2xl border border-border/60 bg-card/40 p-3">
-      <div className="grid grid-cols-3 gap-3">
-        <SpeedTile speed={trip.gps.speed} />
-        <CompassTile heading={trip.gps.heading} />
-        <GpsTile accuracy={trip.gps.gpsAccuracy} />
-      </div>
+    <div className="grid grid-cols-3 gap-3">
+      <SpeedTile speed={trip.gps.speed} />
+      <CompassTile heading={trip.gps.heading} />
+      <GpsTile accuracy={trip.gps.gpsAccuracy} />
     </div>
   );
 }
 
 function SpeedTile({ speed }: { speed: number }) {
   return (
-    <div className="flex flex-col items-center gap-0.5">
-      <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        <Gauge className="h-3 w-3" strokeWidth={2.5} />
+    <div className="flex flex-col items-center justify-between rounded-2xl border border-rose-100 bg-rose-50/50 p-3 shadow-sm hover:scale-[1.02] transition-transform">
+      <div className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-rose-500">
+        <Gauge className="h-3.5 w-3.5" strokeWidth={2.5} />
         Speed
       </div>
-      <div className="font-display text-xl font-bold leading-none">{Math.round(speed)}</div>
-      <div className="text-[10px] font-medium text-muted-foreground">km/h</div>
+      <div className="font-display text-2xl font-black text-rose-600 leading-none my-1.5">{Math.round(speed)}</div>
+      <div className="text-[9px] font-extrabold text-rose-400 uppercase tracking-wider">km/h</div>
     </div>
   );
 }
@@ -518,19 +521,19 @@ function SpeedTile({ speed }: { speed: number }) {
 function CompassTile({ heading }: { heading: number }) {
   const label = compassLabel(heading);
   return (
-    <div className="flex flex-col items-center gap-0.5">
-      <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        <Compass className="h-3 w-3" strokeWidth={2.5} />
+    <div className="flex flex-col items-center justify-between rounded-2xl border border-indigo-100 bg-indigo-50/50 p-3 shadow-sm hover:scale-[1.02] transition-transform">
+      <div className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-indigo-500">
+        <Compass className="h-3.5 w-3.5" strokeWidth={2.5} />
         Heading
       </div>
-      <div className="relative h-8 w-8">
-        <div className="absolute inset-0 rounded-full border border-border/70" />
+      <div className="relative h-8 w-8 my-1">
+        <div className="absolute inset-0 rounded-full border border-indigo-200" />
         <div className="absolute inset-0" style={{ transform: `rotate(${heading}deg)` }}>
           <div className="absolute left-1/2 top-0.5 -translate-x-1/2 border-x-[4px] border-b-[7px] border-x-transparent border-b-brand" />
-          <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-muted-foreground/60" />
+          <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-brand" />
         </div>
       </div>
-      <div className="text-[10px] font-semibold text-foreground">{label}</div>
+      <div className="text-[9px] font-black text-indigo-600 uppercase tracking-wider">{label}</div>
     </div>
   );
 }
@@ -538,23 +541,22 @@ function CompassTile({ heading }: { heading: number }) {
 function GpsTile({ accuracy }: { accuracy: number }) {
   const quality =
     accuracy < 5
-      ? { text: "Excellent", cls: "text-success" }
+      ? { text: "Excellent", cls: "text-emerald-600 border-emerald-200 bg-emerald-50" }
       : accuracy < 15
-        ? { text: "Good", cls: "text-success" }
+        ? { text: "Good", cls: "text-emerald-600 border-emerald-200 bg-emerald-50" }
         : accuracy < 40
-          ? { text: "Fair", cls: "text-warning" }
-          : { text: "Weak", cls: "text-danger" };
+          ? { text: "Fair", cls: "text-amber-600 border-amber-200 bg-amber-50" }
+          : { text: "Weak", cls: "text-rose-600 border-rose-200 bg-rose-50" };
   return (
-    <div className="flex flex-col items-center gap-0.5">
-      <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        <Radio className="h-3 w-3" strokeWidth={2.5} />
+    <div className="flex flex-col items-center justify-between rounded-2xl border border-sky-100 bg-sky-50/50 p-3 shadow-sm hover:scale-[1.02] transition-transform">
+      <div className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-sky-500">
+        <Radio className="h-3.5 w-3.5" strokeWidth={2.5} />
         GPS
       </div>
-      <div className="font-display text-xl font-bold leading-none">
-        ±{accuracy.toFixed(0)}
-        <span className="text-[10px] font-medium text-muted-foreground"> m</span>
+      <div className="font-display text-[15px] font-black text-sky-600 leading-none my-1.5">
+        ±{accuracy.toFixed(0)}m
       </div>
-      <div className={`text-[10px] font-semibold ${quality.cls}`}>{quality.text}</div>
+      <div className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${quality.cls}`}>{quality.text}</div>
     </div>
   );
 }
@@ -713,41 +715,52 @@ function SeatInformationCard({ view }: { view: LiveBusView }) {
   const pct = Math.round(ratio * 100);
   const totalOnboard = trip.passenger.occupiedSeats + trip.passenger.standingPassengers;
   const women = bus.womenSeats ?? 0;
-  const colorVar = `var(--color-occ-${occInfo.val})`;
+  
+  const colorVar = occInfo.val === "low" 
+    ? "#10b981" 
+    : occInfo.val === "medium"
+      ? "#f59e0b" 
+      : occInfo.val === "high"
+        ? "#f97316" 
+        : "#ef4444";
 
   return (
-    <section aria-label="Seat information" className="space-y-1.5">
+    <section aria-label="Seat information" className="space-y-2">
       <SectionLabel icon={Users}>Seats & occupancy</SectionLabel>
-      <div className="rounded-2xl border border-border/60 bg-card/70 p-3">
-        <div className="flex items-center gap-3">
+      <div className="rounded-3xl border border-slate-200/80 bg-white p-4.5 shadow-sm">
+        <div className="flex items-center gap-5">
           <CircularProgress
             value={pct}
             color={colorVar}
             centerLabel={`${pct}%`}
             sublabel={occupancyLabel(occInfo.val as any)}
           />
-          <div className="min-w-0 flex-1 space-y-1.5">
-            <div className={`text-[10px] font-bold rounded px-2 py-0.5 inline-block ${occInfo.bg} ${occInfo.color}`}>
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className={`text-[10px] font-black uppercase tracking-wider rounded-lg px-2.5 py-0.5 inline-block border ${occInfo.bg} ${occInfo.color} ${
+              occInfo.val === "low" ? "border-emerald-200" : occInfo.val === "medium" ? "border-amber-200" : occInfo.val === "high" ? "border-orange-200" : "border-red-200"
+            }`}>
               {occInfo.text}
             </div>
-            <SeatRow icon={Circle} label="Total seats" value={bus.totalSeats} />
-            <SeatRow icon={CircleCheck} label="Available" value={trip.passenger.vacantSeats} tone="success" />
-            <SeatRow icon={Users} label="Occupied" value={trip.passenger.occupiedSeats} />
-            {trip.passenger.standingPassengers > 0 && (
-              <SeatRow
-                icon={Footprints}
-                label="Standing"
-                value={trip.passenger.standingPassengers}
-                tone="warning"
-              />
-            )}
-            {women > 0 && (
-              <SeatRow icon={Sparkles} label="Women reserved" value={women} tone="brand" />
-            )}
+            <div className="space-y-1">
+              <SeatRow icon={Circle} label="Total seats" value={bus.totalSeats} />
+              <SeatRow icon={CircleCheck} label="Available seats" value={trip.passenger.vacantSeats} tone="success" />
+              <SeatRow icon={Users} label="Occupied seats" value={trip.passenger.occupiedSeats} />
+              {trip.passenger.standingPassengers > 0 && (
+                <SeatRow
+                  icon={Footprints}
+                  label="Standing passengers"
+                  value={trip.passenger.standingPassengers}
+                  tone="warning"
+                />
+              )}
+              {women > 0 && (
+                <SeatRow icon={Sparkles} label="Women reserved" value={women} tone="brand" />
+              )}
+            </div>
           </div>
         </div>
-        <div className="mt-3 text-center text-[10px] text-muted-foreground">
-          {totalOnboard} onboard · capacity {bus.totalSeats + (bus.standingCapacity ?? 0)}
+        <div className="mt-3.5 border-t border-slate-100 pt-3 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+          {totalOnboard} Passengers Onboard · capacity {bus.totalSeats + (bus.standingCapacity ?? 0)}
         </div>
       </div>
     </section>
@@ -758,28 +771,32 @@ function SeatRow({
   icon: Icon,
   label,
   value,
-  tone,
+  tone = "default",
 }: {
-  icon: LucideIcon;
+  icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: number;
-  tone?: "success" | "warning" | "brand";
+  tone?: "default" | "success" | "warning" | "brand";
 }) {
-  const toneCls =
-    tone === "success"
-      ? "text-success"
-      : tone === "warning"
-        ? "text-warning"
-        : tone === "brand"
-          ? "text-brand"
-          : "text-foreground";
+  const toneClasses = {
+    default: "text-slate-600 font-semibold",
+    success: "text-emerald-700 font-extrabold",
+    warning: "text-amber-700 font-extrabold",
+    brand: "text-indigo-700 font-extrabold",
+  };
+  const iconClasses = {
+    default: "text-slate-400",
+    success: "text-emerald-500",
+    warning: "text-amber-500",
+    brand: "text-indigo-500",
+  };
   return (
-    <div className="flex items-center justify-between gap-2 text-xs">
-      <span className="flex items-center gap-1.5 text-muted-foreground">
-        <Icon className="h-3 w-3" strokeWidth={2.4} />
+    <div className="flex items-center justify-between text-xs">
+      <span className="flex items-center gap-1.5 text-slate-400 font-semibold">
+        <Icon className={`h-3.5 w-3.5 shrink-0 ${iconClasses[tone]}`} />
         {label}
       </span>
-      <span className={`font-display font-bold ${toneCls}`}>{value}</span>
+      <span className={`font-mono text-sm leading-none ${toneClasses[tone]}`}>{value}</span>
     </div>
   );
 }
@@ -828,9 +845,9 @@ function CircularProgress({
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <div className="font-display text-lg font-bold leading-none">{centerLabel}</div>
+        <div className="font-display text-lg font-black text-slate-800 leading-none">{centerLabel}</div>
         {sublabel && (
-          <div className="mt-0.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <div className="mt-0.5 text-[9px] font-black uppercase tracking-widest text-slate-400">
             {sublabel}
           </div>
         )}
@@ -844,14 +861,14 @@ function CircularProgress({
  * ============================================================ */
 
 const AMENITY_ICONS: Record<BusAmenity, { icon: LucideIcon; label: string; cls: string }> = {
-  ac: { icon: Snowflake, label: "AC", cls: "border-brand/30 bg-brand/5 text-brand" },
-  electric: { icon: Zap, label: "Electric", cls: "border-success/30 bg-success/5 text-success" },
-  luxury: { icon: Crown, label: "Luxury", cls: "border-warning/30 bg-warning/5 text-warning" },
-  mini: { icon: BusIcon, label: "Mini", cls: "border-border/60 bg-muted/50 text-muted-foreground" },
+  ac: { icon: Snowflake, label: "AC", cls: "border-sky-200 bg-sky-50 text-sky-700 font-extrabold shadow-sm" },
+  electric: { icon: Zap, label: "Electric", cls: "border-emerald-200 bg-emerald-50 text-emerald-700 font-extrabold shadow-sm" },
+  luxury: { icon: Crown, label: "Luxury", cls: "border-amber-200 bg-amber-50 text-amber-700 font-extrabold shadow-sm" },
+  mini: { icon: BusIcon, label: "Mini", cls: "border-slate-200 bg-slate-100 text-slate-700 font-extrabold shadow-sm" },
   women_friendly: {
     icon: Sparkles,
     label: "Women friendly",
-    cls: "border-brand/30 bg-brand/5 text-brand",
+    cls: "border-rose-200 bg-rose-50 text-rose-700 font-extrabold shadow-sm",
   },
 };
 
@@ -893,7 +910,7 @@ function FeatureBadges({ view }: { view: LiveBusView }) {
           return (
             <span
               key={f}
-              className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-card/70 px-2 py-0.5 text-[10px] font-medium capitalize text-muted-foreground"
+              className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50/50 px-2 py-0.5 text-[10px] font-bold capitalize text-slate-600 shadow-sm"
             >
               <Icon className="h-3 w-3" strokeWidth={2.4} />
               {f}
@@ -1007,26 +1024,28 @@ function SparklineCard({
     ? `M 0 ${H} L ${pts.replace(/ /g, " L ")} L ${W} ${H} Z`
     : "";
   return (
-    <div className="rounded-xl border border-border/60 bg-card/70 p-2.5">
-      <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        <span>{title}</span>
-        <span>
-          avg {avg}
-          {unit}
-        </span>
+    <div className="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm flex flex-col justify-between">
+      <div>
+        <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-wider text-slate-400">
+          <span>{title}</span>
+          <span>
+            Avg {avg}
+            {unit}
+          </span>
+        </div>
+        <div className="mt-1.5 font-display text-xl font-black text-slate-800 leading-none">
+          {current}
+          <span className="ml-0.5 text-[10px] font-extrabold text-slate-400">{unit}</span>
+        </div>
       </div>
-      <div className="mt-1 font-display text-lg font-bold leading-none">
-        {current}
-        <span className="ml-0.5 text-[10px] font-medium text-muted-foreground">{unit}</span>
-      </div>
-      <svg width="100%" viewBox={`0 0 ${W} ${H}`} className="mt-1 block h-8 w-full">
-        {areaPath && <path d={areaPath} fill={color} opacity="0.15" />}
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} className="mt-3 block h-8 w-full">
+        {areaPath && <path d={areaPath} fill={color} opacity="0.12" />}
         {pts && (
           <polyline
             points={pts}
             fill="none"
             stroke={color}
-            strokeWidth={1.8}
+            strokeWidth={2}
             strokeLinecap="round"
             strokeLinejoin="round"
           />
@@ -1156,47 +1175,47 @@ function ActionsBar({
   bookable?: boolean;
 }) {
   return (
-    <div className="sticky bottom-0 z-10 border-t border-border/60 bg-card/85 p-3 backdrop-blur-xl">
-      <div className="grid grid-cols-2 gap-2">
+    <div className="sticky bottom-0 z-10 border-t border-slate-100 bg-white/95 p-4.5 backdrop-blur-xl shadow-lg">
+      <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
           onClick={onTrackRoute}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-card cursor-pointer ${
+          className={`inline-flex items-center justify-center gap-1.5 rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-wider transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-card cursor-pointer shadow-sm ${
             routeFocused
-              ? "bg-brand text-brand-foreground shadow-sm"
-              : "bg-accent text-foreground hover:bg-accent/70"
+              ? "bg-brand text-brand-foreground hover:bg-brand/90"
+              : "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/50"
           }`}
         >
-          <RouteIcon className="h-3.5 w-3.5" strokeWidth={2.4} />
-          {routeFocused ? "Tracking route" : "Track route"}
+          <RouteIcon className="h-4 w-4" strokeWidth={2.4} />
+          {routeFocused ? "Tracking" : "Track Route"}
         </button>
         <button
           type="button"
           onClick={onCatchNearby}
-          className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand px-3 py-2 text-xs font-semibold text-brand-foreground shadow-sm transition-transform hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-card cursor-pointer"
+          className="inline-flex items-center justify-center gap-1.5 rounded-2xl bg-indigo-600 px-4 py-3 text-xs font-black uppercase tracking-wider text-white shadow-md shadow-indigo-600/10 transition-transform hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-card cursor-pointer"
         >
-          <MapPin className="h-3.5 w-3.5" strokeWidth={2.4} />
-          Nearby stops
+          <MapPin className="h-4 w-4" strokeWidth={2.4} />
+          Nearby Stops
         </button>
         <button
           type="button"
           onClick={onShare}
-          className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border/60 bg-card px-3 py-2 text-xs font-semibold text-foreground hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-card cursor-pointer"
+          className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-700 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-card cursor-pointer shadow-sm"
         >
-          <Share2 className="h-3.5 w-3.5" strokeWidth={2.4} />
-          Share live bus
+          <Share2 className="h-4 w-4" strokeWidth={2.4} />
+          Share Bus
         </button>
         <button
           type="button"
           onClick={onBook}
           disabled={!bookable}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-success focus-visible:ring-offset-2 focus-visible:ring-offset-card ${
+          className={`inline-flex items-center justify-center gap-1.5 rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-wider transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-success focus-visible:ring-offset-2 focus-visible:ring-offset-card ${
             bookable
-              ? "bg-success text-success-foreground hover:bg-success/90 hover:scale-[1.02] cursor-pointer shadow-sm"
-              : "bg-muted text-muted-foreground cursor-not-allowed opacity-80"
+              ? "bg-emerald-600 text-white hover:bg-emerald-500 hover:scale-[1.02] cursor-pointer shadow-md shadow-emerald-600/10"
+              : "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200/50"
           }`}
         >
-          <Ticket className="h-3.5 w-3.5" strokeWidth={2.4} />
+          <Ticket className="h-4 w-4" strokeWidth={2.4} />
           {bookable ? "Book Ticket" : "Crossed"}
         </button>
       </div>
@@ -1210,8 +1229,8 @@ function ActionsBar({
 
 function SectionLabel({ icon: Icon, children }: { icon: LucideIcon; children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-      <Icon className="h-3 w-3" strokeWidth={2.5} />
+    <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400">
+      <Icon className="h-3.5 w-3.5 text-slate-400" strokeWidth={2.5} />
       {children}
     </div>
   );
