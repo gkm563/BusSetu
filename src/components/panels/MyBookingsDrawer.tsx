@@ -102,8 +102,8 @@ export function MyBookingsDrawer({ isOpen, onClose }: MyBookingsDrawerProps) {
                           <span className="font-semibold text-foreground truncate block">{t.passengerName}</span>
                         </div>
                         <div>
-                          <span className="text-[8px] text-muted-foreground uppercase block">Seat</span>
-                          <span className="font-mono font-bold text-brand block">{t.seatNumber}</span>
+                          <span className="text-[8px] text-muted-foreground uppercase block">Seat(s)</span>
+                          <span className="font-mono font-bold text-brand block">{t.seatNumbers?.join(", ")}</span>
                         </div>
                         <div>
                           <span className="text-[8px] text-muted-foreground uppercase block">Fare</span>

@@ -182,7 +182,7 @@ export function CatchThisBusModal({ isOpen, onClose }: { isOpen: boolean; onClos
   const { location } = useGeolocation();
 
   const [bookingStep, setBookingStep] = useState<"details" | "booking" | "ticket">("details");
-  const [selectedSeat, setSelectedSeat] = useState<string | null>(null);
+  const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [passengerName, setPassengerName] = useState("");
   const [passengerAge, setPassengerAge] = useState("");
   const [ticketCode] = useState(() => "BST" + Math.floor(100000 + Math.random() * 900000));
@@ -222,7 +222,7 @@ export function CatchThisBusModal({ isOpen, onClose }: { isOpen: boolean; onClos
 
   const handleClose = () => {
     setBookingStep("details");
-    setSelectedSeat(null);
+    setSelectedSeats([]);
     setPassengerName("");
     setPassengerAge("");
     onClose();
@@ -235,13 +235,19 @@ export function CatchThisBusModal({ isOpen, onClose }: { isOpen: boolean; onClos
       busNumber: view.bus.busNumber,
       passengerName,
       passengerAge: Number(passengerAge) || 25,
-      seatNumber: selectedSeat!,
+      seatNumbers: selectedSeats,
       boardingStop: assessment.targetStopName,
       alightingStop: view.route.destination ?? "Destination",
-      fare: 120,
+      fare: 120 * selectedSeats.length,
       timestamp: new Date().toISOString(),
     });
     setBookingStep("ticket");
+  };
+
+  const toggleSeat = (id: string) => {
+    setSelectedSeats((prev) =>
+      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+    );
   };
 
   return (
@@ -387,11 +393,11 @@ export function CatchThisBusModal({ isOpen, onClose }: { isOpen: boolean; onClos
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                        Select Seat
+                        Select Seats
                       </label>
-                      {selectedSeat && (
+                      {selectedSeats.length > 0 && (
                         <span className="text-[11px] font-bold text-brand bg-brand/10 px-2 py-0.5 rounded-full font-mono">
-                          Seat {selectedSeat}
+                          Seats: {selectedSeats.join(", ")}
                         </span>
                       )}
                     </div>
@@ -425,27 +431,27 @@ export function CatchThisBusModal({ isOpen, onClose }: { isOpen: boolean; onClos
                               <SeatButton
                                 id={seatA}
                                 occupied={occupiedSeats.has(seatA)}
-                                selected={selectedSeat === seatA}
-                                onClick={() => setSelectedSeat(seatA)}
+                                selected={selectedSeats.includes(seatA)}
+                                onClick={() => toggleSeat(seatA)}
                               />
                               <SeatButton
                                 id={seatB}
                                 occupied={occupiedSeats.has(seatB)}
-                                selected={selectedSeat === seatB}
-                                onClick={() => setSelectedSeat(seatB)}
+                                selected={selectedSeats.includes(seatB)}
+                                onClick={() => toggleSeat(seatB)}
                               />
                               <div className="w-2" /> {/* Aisle space */}
                               <SeatButton
                                 id={seatC}
                                 occupied={occupiedSeats.has(seatC)}
-                                selected={selectedSeat === seatC}
-                                onClick={() => setSelectedSeat(seatC)}
+                                selected={selectedSeats.includes(seatC)}
+                                onClick={() => toggleSeat(seatC)}
                               />
                               <SeatButton
                                 id={seatD}
                                 occupied={occupiedSeats.has(seatD)}
-                                selected={selectedSeat === seatD}
-                                onClick={() => setSelectedSeat(seatD)}
+                                selected={selectedSeats.includes(seatD)}
+                                onClick={() => toggleSeat(seatD)}
                               />
                             </div>
                           );
@@ -468,10 +474,10 @@ export function CatchThisBusModal({ isOpen, onClose }: { isOpen: boolean; onClos
 
                   <button
                     onClick={handleConfirmPay}
-                    disabled={!passengerName || !selectedSeat}
+                    disabled={!passengerName || selectedSeats.length === 0}
                     className="w-full mt-4 flex items-center justify-center gap-2 rounded-xl bg-brand py-3 text-xs font-semibold text-brand-foreground shadow-md disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   >
-                    Confirm Booking & Pay (₹120)
+                    Confirm Booking & Pay (₹{120 * (selectedSeats.length || 1)})
                   </button>
                 </div>
               )}
@@ -508,9 +514,9 @@ export function CatchThisBusModal({ isOpen, onClose }: { isOpen: boolean; onClos
                           </span>
                         </div>
                         <div>
-                          <span className="text-[10px] text-muted-foreground block uppercase">Seat Number</span>
+                          <span className="text-[10px] text-muted-foreground block uppercase">Seat Number(s)</span>
                           <span className="font-mono font-bold text-sm text-brand block">
-                            {selectedSeat}
+                            {selectedSeats.join(", ")}
                           </span>
                         </div>
                       </div>
@@ -533,7 +539,7 @@ export function CatchThisBusModal({ isOpen, onClose }: { isOpen: boolean; onClos
                       <div className="border-t border-dashed border-border pt-3 grid grid-cols-2 gap-4">
                         <div>
                           <span className="text-[10px] text-muted-foreground block uppercase">Fare Price</span>
-                          <span className="font-bold text-success text-sm block">₹120.00</span>
+                          <span className="font-bold text-success text-sm block">₹{120 * (selectedSeats.length || 1)}.00</span>
                         </div>
                         <div>
                           <span className="text-[10px] text-muted-foreground block uppercase">Status</span>

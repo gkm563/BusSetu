@@ -54,10 +54,6 @@ Instructions:
 
     // Format history for Gemini API
     const contents = [
-      {
-        role: "user",
-        parts: [{ text: context }],
-      },
       ...history.map((h) => ({
         role: h.role === "user" ? "user" : "model",
         parts: [{ text: h.text }],
@@ -74,7 +70,10 @@ Instructions:
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ contents }),
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: context }] },
+        contents,
+      }),
     });
 
     if (!res.ok) {

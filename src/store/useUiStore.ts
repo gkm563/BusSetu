@@ -9,7 +9,7 @@ export interface BookedTicket {
   busNumber: string;
   passengerName: string;
   passengerAge: number;
-  seatNumber: string;
+  seatNumbers: string[];
   boardingStop: string;
   alightingStop: string;
   fare: number;
