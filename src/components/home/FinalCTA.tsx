@@ -44,6 +44,7 @@ export function FinalCTA() {
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
                 to="/search"
+                search={{ trip: "t-alld-lko-03", from: "Prayagraj", to: "Lucknow", via: "Mirzapur" }}
                 className="group inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-brand shadow-lg transition-transform hover:scale-[1.03]"
               >
                 <Radar className="h-4 w-4" />

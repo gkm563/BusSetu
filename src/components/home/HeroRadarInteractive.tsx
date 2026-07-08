@@ -197,6 +197,7 @@ export function RadarDemoModal({ open, onClose }: { open: boolean; onClose: () =
               <div className="flex items-center gap-2">
                 <Link
                   to="/search"
+                  search={{ trip: "t-alld-lko-03", from: "Prayagraj", to: "Lucknow", via: "Mirzapur" }}
                   className="inline-flex items-center gap-1.5 rounded-full bg-brand px-3 py-1.5 text-xs font-semibold text-brand-foreground shadow-sm transition-transform hover:scale-[1.03]"
                 >
                   Open Live Map

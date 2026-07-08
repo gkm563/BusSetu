@@ -9,12 +9,28 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StoryRouteImport } from './routes/story'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as RoutesRouteImport } from './routes/routes'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PressRouteImport } from './routes/press'
+import { Route as MobileRouteImport } from './routes/mobile'
+import { Route as LegalRouteImport } from './routes/legal'
+import { Route as FeaturesRouteImport } from './routes/features'
+import { Route as EducationRouteImport } from './routes/education'
+import { Route as DevelopersRouteImport } from './routes/developers'
+import { Route as DesktopRouteImport } from './routes/desktop'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as BusinessRouteImport } from './routes/business'
+import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 
+const StoryRoute = StoryRouteImport.update({
+  id: '/story',
+  path: '/story',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
@@ -25,9 +41,59 @@ const RoutesRoute = RoutesRouteImport.update({
   path: '/routes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PressRoute = PressRouteImport.update({
+  id: '/press',
+  path: '/press',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MobileRoute = MobileRouteImport.update({
+  id: '/mobile',
+  path: '/mobile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalRoute = LegalRouteImport.update({
+  id: '/legal',
+  path: '/legal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeaturesRoute = FeaturesRouteImport.update({
+  id: '/features',
+  path: '/features',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EducationRoute = EducationRouteImport.update({
+  id: '/education',
+  path: '/education',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevelopersRoute = DevelopersRouteImport.update({
+  id: '/developers',
+  path: '/developers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DesktopRoute = DesktopRouteImport.update({
+  id: '/desktop',
+  path: '/desktop',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BusinessRoute = BusinessRouteImport.update({
+  id: '/business',
+  path: '/business',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogRoute = BlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -44,43 +110,143 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/blog': typeof BlogRoute
+  '/business': typeof BusinessRoute
   '/contact': typeof ContactRoute
+  '/desktop': typeof DesktopRoute
+  '/developers': typeof DevelopersRoute
+  '/education': typeof EducationRoute
+  '/features': typeof FeaturesRoute
+  '/legal': typeof LegalRoute
+  '/mobile': typeof MobileRoute
+  '/press': typeof PressRoute
+  '/pricing': typeof PricingRoute
   '/routes': typeof RoutesRoute
   '/search': typeof SearchRoute
+  '/story': typeof StoryRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/blog': typeof BlogRoute
+  '/business': typeof BusinessRoute
   '/contact': typeof ContactRoute
+  '/desktop': typeof DesktopRoute
+  '/developers': typeof DevelopersRoute
+  '/education': typeof EducationRoute
+  '/features': typeof FeaturesRoute
+  '/legal': typeof LegalRoute
+  '/mobile': typeof MobileRoute
+  '/press': typeof PressRoute
+  '/pricing': typeof PricingRoute
   '/routes': typeof RoutesRoute
   '/search': typeof SearchRoute
+  '/story': typeof StoryRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/blog': typeof BlogRoute
+  '/business': typeof BusinessRoute
   '/contact': typeof ContactRoute
+  '/desktop': typeof DesktopRoute
+  '/developers': typeof DevelopersRoute
+  '/education': typeof EducationRoute
+  '/features': typeof FeaturesRoute
+  '/legal': typeof LegalRoute
+  '/mobile': typeof MobileRoute
+  '/press': typeof PressRoute
+  '/pricing': typeof PricingRoute
   '/routes': typeof RoutesRoute
   '/search': typeof SearchRoute
+  '/story': typeof StoryRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/contact' | '/routes' | '/search'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/blog'
+    | '/business'
+    | '/contact'
+    | '/desktop'
+    | '/developers'
+    | '/education'
+    | '/features'
+    | '/legal'
+    | '/mobile'
+    | '/press'
+    | '/pricing'
+    | '/routes'
+    | '/search'
+    | '/story'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/contact' | '/routes' | '/search'
-  id: '__root__' | '/' | '/about' | '/contact' | '/routes' | '/search'
+  to:
+    | '/'
+    | '/about'
+    | '/blog'
+    | '/business'
+    | '/contact'
+    | '/desktop'
+    | '/developers'
+    | '/education'
+    | '/features'
+    | '/legal'
+    | '/mobile'
+    | '/press'
+    | '/pricing'
+    | '/routes'
+    | '/search'
+    | '/story'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/blog'
+    | '/business'
+    | '/contact'
+    | '/desktop'
+    | '/developers'
+    | '/education'
+    | '/features'
+    | '/legal'
+    | '/mobile'
+    | '/press'
+    | '/pricing'
+    | '/routes'
+    | '/search'
+    | '/story'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  BlogRoute: typeof BlogRoute
+  BusinessRoute: typeof BusinessRoute
   ContactRoute: typeof ContactRoute
+  DesktopRoute: typeof DesktopRoute
+  DevelopersRoute: typeof DevelopersRoute
+  EducationRoute: typeof EducationRoute
+  FeaturesRoute: typeof FeaturesRoute
+  LegalRoute: typeof LegalRoute
+  MobileRoute: typeof MobileRoute
+  PressRoute: typeof PressRoute
+  PricingRoute: typeof PricingRoute
   RoutesRoute: typeof RoutesRoute
   SearchRoute: typeof SearchRoute
+  StoryRoute: typeof StoryRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/story': {
+      id: '/story'
+      path: '/story'
+      fullPath: '/story'
+      preLoaderRoute: typeof StoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/search': {
       id: '/search'
       path: '/search'
@@ -95,11 +261,81 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RoutesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/press': {
+      id: '/press'
+      path: '/press'
+      fullPath: '/press'
+      preLoaderRoute: typeof PressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mobile': {
+      id: '/mobile'
+      path: '/mobile'
+      fullPath: '/mobile'
+      preLoaderRoute: typeof MobileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal': {
+      id: '/legal'
+      path: '/legal'
+      fullPath: '/legal'
+      preLoaderRoute: typeof LegalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/features': {
+      id: '/features'
+      path: '/features'
+      fullPath: '/features'
+      preLoaderRoute: typeof FeaturesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/education': {
+      id: '/education'
+      path: '/education'
+      fullPath: '/education'
+      preLoaderRoute: typeof EducationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/developers': {
+      id: '/developers'
+      path: '/developers'
+      fullPath: '/developers'
+      preLoaderRoute: typeof DevelopersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/desktop': {
+      id: '/desktop'
+      path: '/desktop'
+      fullPath: '/desktop'
+      preLoaderRoute: typeof DesktopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/contact': {
       id: '/contact'
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/business': {
+      id: '/business'
+      path: '/business'
+      fullPath: '/business'
+      preLoaderRoute: typeof BusinessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog': {
+      id: '/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof BlogRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -122,9 +358,20 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  BlogRoute: BlogRoute,
+  BusinessRoute: BusinessRoute,
   ContactRoute: ContactRoute,
+  DesktopRoute: DesktopRoute,
+  DevelopersRoute: DevelopersRoute,
+  EducationRoute: EducationRoute,
+  FeaturesRoute: FeaturesRoute,
+  LegalRoute: LegalRoute,
+  MobileRoute: MobileRoute,
+  PressRoute: PressRoute,
+  PricingRoute: PricingRoute,
   RoutesRoute: RoutesRoute,
   SearchRoute: SearchRoute,
+  StoryRoute: StoryRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

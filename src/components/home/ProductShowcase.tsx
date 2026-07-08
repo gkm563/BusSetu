@@ -43,7 +43,7 @@ export function ProductShowcase() {
                 <span className="h-2.5 w-2.5 rounded-full bg-success/60" />
               </div>
               <div className="flex-1 rounded-full border border-border/60 bg-background/70 px-3 py-1 text-center text-[11px] text-muted-foreground">
-                bussetu.app/search
+                BusSetu.app/search
               </div>
               <div className="hidden gap-1 sm:flex">
                 <span className="h-6 w-14 rounded-md bg-muted/70" />

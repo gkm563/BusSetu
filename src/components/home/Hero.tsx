@@ -22,6 +22,9 @@ export function Hero() {
           India's No. 1 online <br className="hidden md:block" />
           bus ticket booking site
         </h1>
+        <p className="mt-4 text-slate-500 font-semibold text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+          India's only bus tracking freely and booking anytime anywhere anyone
+        </p>
 
         <div className="mt-12 w-full">
           <RouteSearchPanel variant="horizontal" />

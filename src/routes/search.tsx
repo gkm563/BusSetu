@@ -2,13 +2,10 @@ import { createFileRoute, useSearch, Link } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
-import { Navbar } from "@/components/layout/Navbar";
 import { BusMapClient } from "@/components/map/BusMapClient";
 import { RouteSearchPanel } from "@/components/panels/RouteSearchPanel";
-import { FiltersPanel } from "@/components/panels/FiltersPanel";
-import { NearbyBusesPanel } from "@/components/panels/NearbyBusesPanel";
-import { BusDetailsPanel } from "@/components/panels/BusDetailsPanel";
 import { RouteResultsPanel } from "@/components/panels/RouteResultsPanel";
+import { BusDetailsPanel } from "@/components/panels/BusDetailsPanel";
 import { RouteTimeline } from "@/components/panels/RouteTimeline";
 import { LiveRadarAnnouncer } from "@/components/map/LiveRadarAnnouncer";
 import { OfflineBanner } from "@/components/state/OfflineBanner";
@@ -112,11 +109,8 @@ function SearchPage() {
           <RouteSearchPanel />
         </div>
 
-        {/* Left panel: either route intelligence results, or the
-         *  radius-based Smart Discovery. One at a time so the UI stays
-         *  focused on a single question. */}
         <div className="pointer-events-none absolute inset-x-4 bottom-4 md:bottom-auto md:top-28 md:left-4 md:right-auto md:inset-x-auto z-[550] flex justify-center md:justify-start">
-          {routeQueryActive ? <RouteResultsPanel /> : <NearbyBusesPanel />}
+          {routeQueryActive ? <RouteResultsPanel /> : null}
         </div>
 
         {/* Right: bus details */}

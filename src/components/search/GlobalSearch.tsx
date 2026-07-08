@@ -23,7 +23,7 @@ export function GlobalSearch() {
     stops: [],
     cities: [],
   });
-  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const wrapperRef = useRef<HTMLFormElement | null>(null);
   const navigate = useNavigate();
   const selectTrip = useUiStore((s) => s.selectTrip);
   const focusRoute = useUiStore((s) => s.focusRoute);
@@ -56,8 +56,36 @@ export function GlobalSearch() {
     navigate({ to: "/search" });
   }
 
+  function handleFormSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!q.trim()) return;
+
+    const cleanQ = q.toLowerCase().replace(/\s+/g, "");
+    const activeTripIds = useLiveStore.getState().tripIdList;
+    const trips = useLiveStore.getState().tripsById;
+    const buses = useLiveStore.getState().busesById;
+    let matchTripId = null;
+
+    for (const tid of activeTripIds) {
+      const trip = trips[tid];
+      const bus = trip ? buses[trip.busId] : null;
+      if (bus && bus.busNumber.toLowerCase().replace(/\s+/g, "").includes(cleanQ)) {
+        matchTripId = trip.tripId;
+        break;
+      }
+    }
+
+    if (matchTripId) {
+      selectTrip(matchTripId);
+      setOpen(false);
+      navigate({ to: "/search" });
+    } else {
+      goSearch();
+    }
+  }
+
   return (
-    <div ref={wrapperRef} className="relative w-full max-w-md">
+    <form ref={wrapperRef} onSubmit={handleFormSubmit} className="relative w-full max-w-md">
       <div className="flex items-center gap-2 rounded-full border border-border/70 bg-card/70 px-3 py-1.5 shadow-sm transition-colors focus-within:border-brand/50 focus-within:ring-2 focus-within:ring-brand/20">
         <Search className="h-4 w-4 text-muted-foreground" />
         <input
@@ -75,6 +103,7 @@ export function GlobalSearch() {
             onClick={() => setQ("")}
             className="text-muted-foreground hover:text-foreground cursor-pointer"
             aria-label="Clear"
+            type="button"
           >
             <X className="h-3.5 w-3.5" />
           </button>
@@ -129,6 +158,7 @@ export function GlobalSearch() {
                 return (
                   <button
                     key={b.id}
+                    type="button"
                     className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left hover:bg-accent"
                     onClick={() => {
                       if (trip) selectTrip(trip.tripId);
@@ -150,6 +180,7 @@ export function GlobalSearch() {
               {results.routes.map((r) => (
                 <button
                   key={r.id}
+                  type="button"
                   className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left hover:bg-accent"
                   onClick={() => {
                     focusRoute(r.id);
@@ -168,6 +199,7 @@ export function GlobalSearch() {
               {results.stops.map((s) => (
                 <button
                   key={s.id}
+                  type="button"
                   className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left hover:bg-accent"
                   onClick={goSearch}
                 >
@@ -183,6 +215,7 @@ export function GlobalSearch() {
               {results.cities.map((c) => (
                 <button
                   key={c}
+                  type="button"
                   className="w-full rounded-lg px-3 py-2 text-left hover:bg-accent"
                   onClick={goSearch}
                 >
@@ -193,7 +226,7 @@ export function GlobalSearch() {
           )}
         </div>
       )}
-    </div>
+    </form>
   );
 }
 

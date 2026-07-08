@@ -5,7 +5,7 @@ import { Copy } from "lucide-react";
 export function OffersSection() {
   const [activeTab, setActiveTab] = useState("All");
 
-  const tabs = ["All", "Bus", "Train", "HOTEL"];
+  const tabs = ["All", "Bus"];
 
   const offers = [
     {
@@ -21,20 +21,6 @@ export function OffersSection() {
       validity: "Valid till 31 Jul",
       code: "SUPERHIT",
       bg: "bg-gradient-to-r from-red-500 to-red-700",
-    },
-    {
-      type: "Train",
-      title: "Flat Rs 60 off on train tickets",
-      validity: "Valid till 31 Jul",
-      code: "RAIL60",
-      bg: "bg-gradient-to-r from-purple-500 to-purple-700",
-    },
-    {
-      type: "HOTEL",
-      title: "Save up to Rs 500 on hotels",
-      validity: "Valid till 31 Jul",
-      code: "STAY500",
-      bg: "bg-gradient-to-r from-orange-500 to-orange-700",
     }
   ];
 

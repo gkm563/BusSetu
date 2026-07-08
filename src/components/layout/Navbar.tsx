@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Radar, User, ChevronDown, BusFront } from "lucide-react";
+import { User, ChevronDown, BusFront } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
@@ -10,12 +10,19 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { MyBookingsDrawer } from "@/components/panels/MyBookingsDrawer";
 
 const NAV = [
-  { to: "/routes", label: "Routes", section: "features" },
-  { to: "/search", label: "Live Map", section: "how" },
-  { to: "/about", label: "About", section: "support" },
+  {
+    to: "/search",
+    search: { trip: "t-alld-lko-03", from: "Prayagraj", to: "Lucknow", via: "Mirzapur" },
+    labelKey: "liveRadar",
+    fallback: "Live Map",
+    section: "radar"
+  },
+  { to: "/routes", labelKey: "routes", fallback: "Routes", section: "routes" },
+  { to: "/about", labelKey: "about", fallback: "About Us", section: "about" },
+  { to: "/contact", labelKey: "contact", fallback: "Contact", section: "support" },
 ] as const;
 
-const SECTION_IDS = ["features", "how", "support"] as const;
+const SECTION_IDS = ["routes", "about", "support"] as const;
 
 export function Navbar() {
   const { t, language, setLanguage } = useTranslation();
@@ -84,11 +91,12 @@ export function Navbar() {
           <nav className="hidden items-center gap-1 md:flex">
             {NAV.map((item) => {
               const active = isHome ? activeSection === item.section : pathname === item.to;
-              const label = item.section === "features" ? t("liveRadar") : item.section === "how" ? t("about") : t("contact");
+              const label = t(item.labelKey as any) || item.fallback;
               return (
                 <Link
                   key={item.to}
                   to={item.to}
+                  search={("search" in item ? item.search : undefined) as any}
                   onClick={(e) => handleNavClick(e, item.section)}
                   className={`rounded-full px-3 py-1.5 text-sm transition-colors ${
                     active
@@ -108,6 +116,7 @@ export function Navbar() {
         <div className="flex items-center gap-2">
           <Link
             to="/search"
+            search={{ trip: "t-alld-lko-03", from: "Prayagraj", to: "Lucknow", via: "Mirzapur" }}
             className="hidden items-center gap-1.5 rounded-full bg-brand px-3.5 py-2 text-xs font-semibold text-brand-foreground shadow-md shadow-brand/25 transition-transform hover:scale-[1.03] sm:inline-flex cursor-pointer"
           >
             <BusFront className="h-3.5 w-3.5" aria-hidden />

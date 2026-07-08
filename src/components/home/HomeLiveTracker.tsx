@@ -43,6 +43,7 @@ export function HomeLiveTracker() {
         </div>
         <Link
           to="/search"
+          search={{ trip: "t-alld-lko-03", from: "Prayagraj", to: "Lucknow", via: "Mirzapur" }}
           className="inline-flex items-center gap-1 text-xs font-semibold text-brand hover:underline cursor-pointer"
         >
           {t("openRadar")} <ArrowRight className="h-3 w-3" />

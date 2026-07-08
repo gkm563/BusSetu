@@ -60,7 +60,7 @@ function ContactPage() {
           </form>
 
           <div className="space-y-3">
-            <InfoCard icon={<Mail className="h-4 w-4" />} title="Email" body="hello@bussetu.app" />
+            <InfoCard icon={<Mail className="h-4 w-4" />} title="Email" body="hello@BusSetu.app" />
             <InfoCard
               icon={<MessageSquare className="h-4 w-4" />}
               title="Support"

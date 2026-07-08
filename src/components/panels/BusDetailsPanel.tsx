@@ -11,7 +11,6 @@ import {
   Circle,
   CircleCheck,
   Clock,
-  Compass,
   Crown,
   Footprints,
   Gauge,
@@ -40,10 +39,9 @@ import { useLiveStore } from "@/store/useLiveStore";
 import type { LiveBusView } from "@/types/view";
 import type { BusAmenity } from "@/types/bus";
 import { occupancyRatio } from "@/utils/occupancy";
-import { formatEta, formatKm, formatRelative } from "@/utils/format";
+import { formatEta, formatKm, formatRelative, formatFullDateTime } from "@/utils/format";
 import { CatchThisBusCard, CatchThisBusModal } from "./CatchThisBusCard";
 import { useGeolocation } from "@/hooks/useGeolocation";
-import { CatchService } from "@/services/discovery/CatchService";
 import { haversineKm } from "@/utils/geo";
 const FAV_KEY = "bussetu.favoriteTrips";
 
@@ -403,9 +401,14 @@ function PanelBody({
           distanceCoveredKm={distanceCoveredKm}
         />
 
-        <div className="pt-1 text-center text-[11px] text-muted-foreground">
-          <Signal className="mr-1 inline h-3 w-3 text-success" />
-          Live · updated {formatRelative(trip.lastUpdated)}
+        <div className="pt-1 text-center space-y-0.5 text-muted-foreground">
+          <div className="text-[11px] font-bold">
+            <Signal className="mr-1 inline h-3 w-3 text-success" />
+            Live · updated {formatRelative(trip.lastUpdated)}
+          </div>
+          <div className="text-[9px] text-slate-450 font-mono">
+            {formatFullDateTime(trip.lastUpdated)}
+          </div>
         </div>
       </div>
 
@@ -729,7 +732,7 @@ function SpeedTile({ speed }: { speed: number }) {
  *  LIVE LOCATION MINI-MAP (SVG based)
  * ============================================================ */
 
-function LiveLocationMap({ view }: { view: LiveBusView }) {
+export function LiveLocationMap({ view }: { view: LiveBusView }) {
   const { route, trip } = view;
   const pts = route.polyline.length
     ? route.polyline
@@ -1262,7 +1265,7 @@ const compactContainerVariants = {
 
 const compactItemVariants = {
   hidden: { opacity: 0, x: -8 },
-  show: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
+  show: { opacity: 1, x: 0, transition: { type: "spring" as const, stiffness: 300, damping: 24 } },
 };
 
 function CompactTimeline({ view, onExpand }: { view: LiveBusView; onExpand: () => void }) {
@@ -1430,7 +1433,7 @@ function SectionLabel({ icon: Icon, children }: { icon: LucideIcon; children: Re
   );
 }
 
-function compassLabel(deg: number): string {
+export function compassLabel(deg: number): string {
   const d = ((deg % 360) + 360) % 360;
   const dirs = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
   return dirs[Math.round(d / 45) % 8];

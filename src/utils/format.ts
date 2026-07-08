@@ -26,3 +26,14 @@ export function formatKm(km: number): string {
   if (km < 1) return `${Math.round(km * 1000)} m`;
   return `${km.toFixed(1)} km`;
 }
+
+export function formatFullDateTime(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  const day = d.getDate().toString().padStart(2, "0");
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const month = months[d.getMonth()];
+  const year = d.getFullYear();
+  const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return `${day} ${month} ${year} at ${time}`;
+}
