@@ -45,12 +45,12 @@ export function AiAssistantPanel() {
         language
       );
       setMessages((prev) => [...prev, { role: "model", text: response }]);
-    } catch (err) {
+    } catch (err: any) {
       setMessages((prev) => [
         ...prev,
         {
           role: "model",
-          text: "Sorry, I am facing an issue connecting to my telemetry database right now. Please try again.",
+          text: err?.message || "Sorry, I am facing an issue connecting to my telemetry database right now. Please try again.",
         },
       ]);
     } finally {

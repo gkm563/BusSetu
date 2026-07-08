@@ -52,9 +52,14 @@ Instructions:
 `;
   },
 
-  async askAi(prompt: string, userLocation: { lat: number; lng: number } | null, history: ChatMessage[], language: string = "english") {
-    const key = import.meta.env.VITE_GEMINI_API_KEY || "YOUR_API_KEY_HERE";
-    const context = this.getSystemContext(userLocation, language);
+  async askAi(prompt: string, userLocation: { lat: number; lng: number } | null, history: ChatMessage[], languageCode: string = "en") {
+    const key = import.meta.env.VITE_GEMINI_API_KEY;
+    if (!key || key === "YOUR_API_KEY_HERE") {
+      throw new Error(
+        "API Key is missing! If you are testing locally, please restart your Vite dev server so it can read the .env.local file. If you are on Vercel, please ensure VITE_GEMINI_API_KEY is set in your environment variables and trigger a new deployment."
+      );
+    }
+    const context = this.getSystemContext(userLocation, languageCode);
 
     // Format history for Gemini API
     const contents = [
