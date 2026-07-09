@@ -355,6 +355,54 @@ function PanelBody({
     return view.trip.routeProgress <= userProgress + 0.02;
   }, [view, location]);
 
+  // Closest stop index to the user
+  const closestStopIndex = useMemo(() => {
+    if (!location || !route.stops || route.stops.length === 0) return -1;
+    let minDistance = Infinity;
+    let minIdx = -1;
+    route.stops.forEach((stop, idx) => {
+      const d = haversineKm(
+        { lat: location.lat, lng: location.lng },
+        { lat: stop.lat, lng: stop.lng }
+      );
+      if (d < minDistance) {
+        minDistance = d;
+        minIdx = idx;
+      }
+    });
+    return minIdx;
+  }, [location, route.stops]);
+
+  // Bus's current segment index
+  const busStopIdx = useMemo(() => {
+    const stops = route.stops;
+    if (!trip || !stops) return 0;
+    const idx = trip.currentStopId
+      ? stops.findIndex((s) => s.id === trip.currentStopId)
+      : trip.nextStopId
+        ? Math.max(0, stops.findIndex((s) => s.id === trip.nextStopId) - 1)
+        : 0;
+    return idx === -1 ? 0 : idx;
+  }, [trip, route.stops]);
+
+  // Whether the bus has already crossed the user
+  const hasCrossedUser = useMemo(() => {
+    if (closestStopIndex === -1) return true;
+    return busStopIdx >= closestStopIndex;
+  }, [busStopIdx, closestStopIndex]);
+
+  // User's closest stop details
+  const userStopName = useMemo(() => {
+    if (closestStopIndex === -1) return undefined;
+    return route.stops[closestStopIndex]?.name;
+  }, [closestStopIndex, route.stops]);
+
+  const userStopEta = useMemo(() => {
+    if (closestStopIndex === -1) return undefined;
+    const stopId = route.stops[closestStopIndex]?.id;
+    return stopId ? trip.eta[stopId] : undefined;
+  }, [closestStopIndex, route.stops, trip.eta]);
+
   return (
     <>
       <StickyHeader view={view} onClose={onClose} fav={fav} />
@@ -363,9 +411,10 @@ function PanelBody({
         {/* 1. ETA and Delay Status (More visible Delay Badge, 🟢 LIVE badge) */}
         <EtaDelayBanner
           trip={trip}
-          nextStopName={nextStopName}
-          nextStopEta={nextStopEta}
+          nextStopName={hasCrossedUser ? nextStopName : userStopName}
+          nextStopEta={hasCrossedUser ? nextStopEta : (userStopEta || nextStopEta)}
           distanceToUserKm={distanceToUserKm}
+          isToUser={!hasCrossedUser}
         />
 
         {/* 2. Current Stop & Next Stop */}
@@ -600,16 +649,34 @@ function EtaDelayBanner({
   nextStopName,
   nextStopEta,
   distanceToUserKm,
+  isToUser = false,
 }: {
   trip: LiveBusView["trip"];
   nextStopName?: string;
   nextStopEta?: string;
   distanceToUserKm: number | null;
+  isToUser?: boolean;
 }) {
   const language = useUiStore((s) => s.language);
   const t = PANEL_T[language] || PANEL_T.en;
   const isDelayed = typeof trip.delay === "number" && trip.delay > 0;
-  
+
+  const bannerTitle = isToUser
+    ? (language === "hi" ? "आपके पास पहुँचने का समय" : language === "th" ? "เวลาถึงตำแหน่งของคุณ" : "ETA to Your Location")
+    : t.nextStopEta;
+
+  const targetLabel = isToUser ? (
+    language === "hi" ? (
+      <>आपके पास पहुँचने में (<span className="text-slate-800 font-black">{nextStopName} के पास</span>)</>
+    ) : language === "th" ? (
+      <>เพื่อไปถึงคุณ (<span className="text-slate-800 font-black">ใกล้ {nextStopName}</span>)</>
+    ) : (
+      <>to reach you (<span className="text-slate-800 font-black">near {nextStopName}</span>)</>
+    )
+  ) : (
+    <>{t.toReach} <span className="text-slate-800 font-black">{nextStopName ?? (language === "hi" ? "अगला स्टॉप" : language === "th" ? "ป้ายถัดไป" : "next stop")}</span></>
+  );
+
   return (
     <div className="flex flex-col gap-3.5 rounded-3xl border border-indigo-100/80 bg-gradient-to-br from-indigo-50/50 via-white to-indigo-50/20 p-5 shadow-md shadow-indigo-100/10">
       <div className="flex items-center justify-between">
@@ -634,14 +701,14 @@ function EtaDelayBanner({
       </div>
       <div className="flex flex-col gap-1 mt-1">
         <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">
-          {t.nextStopEta}
+          {bannerTitle}
         </span>
         <div className="flex items-baseline gap-2">
           <span className="text-4xl font-black font-display text-transparent bg-clip-text bg-gradient-to-r from-brand to-indigo-600 tracking-tight">
             {nextStopEta ? formatEta(nextStopEta) : "—"}
           </span>
           <span className="text-sm text-slate-600 font-extrabold truncate">
-            {t.toReach} <span className="text-slate-800 font-black">{nextStopName ?? (language === "hi" ? "अगला स्टॉप" : language === "th" ? "ป้ายถัดไป" : "next stop")}</span>
+            {targetLabel}
           </span>
         </div>
       </div>
