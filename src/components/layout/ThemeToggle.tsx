@@ -11,10 +11,7 @@ export function ThemeToggle() {
     if (typeof window === "undefined") return;
     // Hydrate <html> class from persisted preference (SSR-safe).
     const raw = window.localStorage.getItem("bussetu.darkMode");
-    let desired = darkMode;
-    if (raw === "1") desired = true;
-    else if (raw === "0") desired = false;
-    else desired = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const desired = raw === "1"; // Default to light mode (false) if not explicitly set to "1"
     if (desired !== darkMode) {
       setDarkMode(desired);
     } else {

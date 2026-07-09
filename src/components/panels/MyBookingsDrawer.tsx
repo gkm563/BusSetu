@@ -21,13 +21,12 @@ export function MyBookingsDrawer({ isOpen, onClose }: MyBookingsDrawerProps) {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.5 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-[1050] bg-black"
+            className="fixed inset-0 z-[2000] bg-black/60"
           />
 
           {/* Slide over */}
@@ -36,7 +35,7 @@ export function MyBookingsDrawer({ isOpen, onClose }: MyBookingsDrawerProps) {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 220 }}
-            className="fixed inset-y-0 right-0 z-[1060] w-full max-w-sm border-l border-border/80 bg-background/95 backdrop-blur-xl shadow-2xl flex flex-col"
+            className="fixed inset-y-0 right-0 z-[2010] w-full max-w-sm border-l border-border/80 bg-background/95 backdrop-blur-xl shadow-2xl flex flex-col"
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-border/60 bg-muted/20 px-4 py-3.5">
@@ -170,14 +169,14 @@ function TicketCard({ t, trip, route, liveEtaText, currentStopName, speed }: any
     <div className="flex flex-col gap-2">
       <div
         ref={ticketRef}
-        className="print-ticket relative rounded-2xl border border-border bg-card/40 p-4 shadow-sm overflow-hidden flex flex-col gap-3.5 hover:border-brand/40 transition-colors"
+        className="print-ticket relative rounded-2xl border border-slate-200/80 bg-gradient-to-br from-indigo-50/15 via-white to-violet-50/20 p-4 shadow-sm overflow-hidden flex flex-col gap-3.5 hover:border-brand/30 transition-all hover:shadow-md"
       >
-        <div className="flex items-center justify-between mb-1 pb-2 border-b border-border/50">
+        <div className="flex items-center justify-between mb-1 pb-2 border-b border-slate-100">
           <div className="flex items-center gap-2">
-            <img src="/favicon.jpg" alt="Logo" className="h-4 w-4 rounded" />
-            <span className="font-display font-bold text-xs uppercase text-foreground tracking-wide">BusSetu Ticket</span>
+            <img src="/favicon.jpg" alt="Logo" className="h-4 w-4 rounded shadow-sm border border-slate-100" />
+            <span className="font-display font-black text-[10px] uppercase text-slate-800 tracking-wider">BusSetu Boarding Pass</span>
           </div>
-          <span className="font-mono text-[9px] font-bold bg-muted px-2 py-0.5 rounded text-muted-foreground">
+          <span className="font-mono text-[9px] font-black bg-brand/10 text-brand px-2 py-0.5 rounded-lg border border-brand/20">
             {t.ticketCode}
           </span>
         </div>
@@ -185,81 +184,83 @@ function TicketCard({ t, trip, route, liveEtaText, currentStopName, speed }: any
         {/* Ticket header */}
         <div className="flex justify-between items-start">
           <div>
-            <span className="text-[9px] font-bold text-brand uppercase tracking-wider">
+            <span className="text-[10px] font-black text-brand bg-brand/5 border border-brand/10 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
               🚌 {t.busNumber}
             </span>
-            <h4 className="font-display font-bold text-xs text-foreground mt-0.5">
-              {t.boardingStop} <ArrowRight className="inline-block h-3 w-3 mx-1 text-muted-foreground" /> {t.alightingStop}
+            <h4 className="font-display font-extrabold text-sm text-slate-800 mt-2 flex items-center flex-wrap gap-1">
+              <span>{t.boardingStop}</span>
+              <ArrowRight className="inline-block h-3.5 w-3.5 mx-1 text-slate-400 shrink-0" />
+              <span>{t.alightingStop}</span>
             </h4>
           </div>
         </div>
 
         {/* Passenger details */}
-        <div className="grid grid-cols-3 gap-2 text-[10px] border-t border-border/50 pt-2.5">
+        <div className="grid grid-cols-3 gap-2 text-[10px] border-t border-slate-100 pt-3">
           <div>
-            <span className="text-[8px] text-muted-foreground uppercase block">Passenger</span>
-            <span className="font-semibold text-foreground truncate block">{t.passengerName}</span>
+            <span className="text-[8px] text-slate-400 font-bold uppercase block tracking-wider mb-0.5">Passenger</span>
+            <span className="font-bold text-slate-700 truncate block">{t.passengerName}</span>
           </div>
           <div>
-            <span className="text-[8px] text-muted-foreground uppercase block">Seat(s)</span>
-            <span className="font-mono font-bold text-brand block">{t.seatNumbers?.join(", ")}</span>
+            <span className="text-[8px] text-slate-400 font-bold uppercase block tracking-wider mb-0.5">Seat(s)</span>
+            <span className="font-mono font-black text-brand block">{t.seatNumbers?.join(", ")}</span>
           </div>
           <div>
-            <span className="text-[8px] text-muted-foreground uppercase block">Fare</span>
-            <span className="font-semibold text-success block">₹{t.fare}</span>
+            <span className="text-[8px] text-slate-400 font-bold uppercase block tracking-wider mb-0.5">Total Fare</span>
+            <span className="font-extrabold text-emerald-600 block">₹{t.fare}</span>
           </div>
         </div>
 
         {/* Dynamic Telemetry Status */}
         {trip ? (
-          <div className="rounded-xl bg-brand/5 border border-brand/10 p-2.5 flex items-center justify-between text-[10px]">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success/70" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+          <div className="rounded-2xl bg-gradient-to-r from-emerald-50/40 to-teal-50/30 border border-emerald-100 p-3 flex items-center justify-between text-[11px] shadow-sm">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="relative flex h-2 w-2 shrink-0">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
               </span>
               <div className="min-w-0">
-                <span className="text-muted-foreground block text-[8px] uppercase font-bold">
-                  Live Tracking Status
+                <span className="text-slate-400 block text-[8px] uppercase font-black tracking-wider">
+                  Live Status
                 </span>
-                <span className="font-medium text-foreground truncate block">
-                  {currentStopName ? `Near ${currentStopName}` : `${speed} km/h`}
+                <span className="font-bold text-slate-700 truncate block">
+                  {currentStopName ? `Near ${currentStopName}` : `Cruising · ${speed} km/h`}
                 </span>
               </div>
             </div>
-            <div className="text-right">
-              <span className="text-muted-foreground block text-[8px] uppercase font-bold">ETA</span>
-              <span className="font-mono font-bold text-brand">{liveEtaText}</span>
+            <div className="text-right shrink-0">
+              <span className="text-slate-400 block text-[8px] uppercase font-black tracking-wider">ETA</span>
+              <span className="font-mono font-black text-brand text-xs">{liveEtaText}</span>
             </div>
           </div>
         ) : (
-          <div className="rounded-xl bg-muted/40 p-2 text-center text-[9px] text-muted-foreground">
+          <div className="rounded-xl bg-slate-50 border border-slate-100 p-2 text-center text-[9px] text-slate-500 font-medium">
             Bus offline · Trip completed
           </div>
         )}
 
         {/* QR Button stub */}
-        <div className="flex items-center justify-between border-t border-dashed border-border/70 pt-2.5">
-          <span className="text-[9px] text-success font-semibold flex items-center gap-1">
-            <ShieldCheck className="h-3.5 w-3.5" /> Booked Live
+        <div className="flex items-center justify-between border-t border-dashed border-slate-200 pt-3">
+          <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
+            <ShieldCheck className="h-4 w-4" /> Booked Live
           </span>
-          <QrCode className="h-5 w-5 text-muted-foreground/60" />
+          <QrCode className="h-5 w-5 text-slate-400" />
         </div>
       </div>
       
-      <div className="grid grid-cols-2 gap-2 mt-1">
+      <div className="grid grid-cols-2 gap-2 mt-2">
         <button
           onClick={() => window.print()}
-          className="w-full flex items-center justify-center gap-2 rounded-xl border border-border bg-card py-2 text-xs font-semibold text-foreground shadow-sm hover:bg-accent cursor-pointer"
+          className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 active:scale-98 transition-all cursor-pointer shadow-sm"
         >
-          Print
+          🖨️ Print Pass
         </button>
         <button
           onClick={downloadTicket}
           disabled={isDownloading}
-          className="w-full flex items-center justify-center gap-2 rounded-xl border border-border bg-card py-2 text-xs font-semibold text-foreground shadow-sm hover:bg-accent disabled:opacity-50 cursor-pointer"
+          className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-brand py-2 text-xs font-bold text-brand-foreground hover:bg-brand/95 disabled:opacity-50 active:scale-98 transition-all cursor-pointer shadow-sm shadow-brand/15"
         >
-          {isDownloading ? "Generating..." : "Download Ticket"}
+          {isDownloading ? "Generating..." : "💾 Download"}
         </button>
       </div>
     </div>
